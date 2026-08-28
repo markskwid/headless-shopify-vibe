@@ -44,6 +44,7 @@ function ClosingLink({
 }) {
   return (
     <SheetClose
+      nativeButton={false}
       render={
         <Link
           href={item.href}
