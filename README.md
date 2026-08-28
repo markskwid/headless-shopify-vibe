@@ -1,36 +1,324 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Headless Vibe
 
-## Getting Started
+A reusable, theme-like Shopify headless storefront starter built with Next.js,
+TypeScript, Tailwind CSS, shadcn/ui, Zod, Motion, and Embla Carousel.
 
-First, run the development server:
+Shopify supplies commerce data and Sanity supplies editorial content. The site
+runs with graceful fallbacks when either service is not configured. Private
+tokens stay in server-only modules and are never exposed with `NEXT_PUBLIC_`
+variables.
+
+The Sanity-editable global header includes Shopify-powered predictive product search. It waits
+300 ms after typing, previews up to six products, handles empty and failed
+searches, and links to a complete `/search` results page. Search result products
+open theme-native `/products/[handle]` pages with a draggable Embla image gallery,
+thumbnails, variant-driven image and price updates, a presentational add-to-cart
+control, and an Embla carousel of Shopify-generated related products.
+
+The homepage can use a Sanity-managed carousel containing up to five reorderable
+banners. Every banner has an image, title, description, enable toggle, and
+optional call to action. The carousel supports dragging, previous/next controls,
+and direct slide selectors. When no complete banner is enabled or Sanity is
+unavailable, the Shopify store introduction remains as the fallback. The
+homepage also presents the six most recently updated Shopify collections with
+their title, description, featured image, and a built-in fallback image. Every
+collection route, including `/collections/all`, supports Shopify-native Search
+& Discovery filters, a currency-aware price-range slider, and automatic
+URL-based sorting for shareable browse states.
+
+Missing routes and unavailable Shopify products or collections render a branded
+404 page with the normal storefront shell and recovery links. Unmatched routes
+return HTTP 404; Next.js can stream an explicit product/collection `notFound()`
+boundary with noindex metadata after the storefront shell has begun rendering.
+
+The Shopify Cart API powers add-to-cart, a right-side cart drawer, responsive
+`/cart` management, quantities, order notes, discount codes, live discounted
+subtotals, and Shopify-hosted checkout. The cart ID remains in an HTTP-only
+cookie and is never exposed to browser JavaScript.
+
+Legacy Shopify customer accounts power the theme-native sign-in, registration,
+password-recovery, and account pages. Customer access tokens remain in secure
+HTTP-only cookies; remembered sessions persist for seven days. Login associates
+the active Shopify cart with the customer, while logout removes that buyer
+identity. The account dashboard includes fulfilled-order count, net spend after
+refunds, pending orders, complete order history, primary shipping information,
+and saved-address creation.
+
+The order-history modal includes a compact image, name, and discounted price
+list for each order. Saved addresses can be edited, deleted after confirmation,
+or made primary directly from the address modal. Address forms use cascading
+country and state/province options backed by an offline server-side dataset,
+while the city remains a freely editable field.
+
+The responsive global footer is also managed from Sanity. Editors can set a
+footer-specific logo and description, add Facebook, Instagram, TikTok, YouTube,
+X, and Pinterest profiles, build up to four single-level link columns, and edit
+the newsletter copy. Newsletter submissions are sent to a configured Klaviyo
+list through a server-only action; matching signed-in customers are also opted
+into Shopify email marketing. The private API key never reaches the browser.
+
+## Requirements
+
+- Node.js 24.11.1 or newer
+- npm
+- A Shopify store with products published to the Headless sales channel
+- Legacy customer accounts for the included email/password account experience
+- A Sanity project for editable homepage, header, and footer content
+- A Klaviyo list and scoped private API key for newsletter subscriptions
+
+## Quick start
 
 ```bash
+npm install
+Copy-Item .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+On macOS or Linux, replace the copy command with:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+If Windows PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`.
 
-To learn more about Next.js, take a look at the following resources:
+## Connect a Shopify store
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. In Shopify admin, install the **Headless** sales channel.
+2. Create a storefront and grant the Storefront API permissions your theme will
+   use.
+3. Copy `.env.example` to `.env.local`.
+4. Set the permanent `your-store.myshopify.com` domain.
+5. Add either a private or public Storefront API access token. A private token is
+   preferred because all API calls in this starter run on the server.
+6. Restart `npm run dev` after changing environment variables.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```dotenv
+SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
+SHOPIFY_STOREFRONT_PRIVATE_ACCESS_TOKEN=your_private_token
+SHOPIFY_STOREFRONT_PUBLIC_ACCESS_TOKEN=
+SHOPIFY_STOREFRONT_API_VERSION=2026-07
+```
 
-## Deploy on Vercel
+Basic product and collection queries can use Shopify's tokenless Storefront API,
+so the domain alone is enough for the included preview on stores that permit
+those queries. Add a token when using features that require authenticated access.
+If both tokens are set, the private token takes precedence.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Never commit `.env.local` or a private Storefront API token. The repository only
+tracks `.env.example`, which contains placeholders.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Enable legacy customer accounts
+
+The included account pages intentionally use Shopify's legacy email/password
+flow because they provide a separate registration form and password recovery.
+
+1. In Shopify admin, open **Settings → Customer accounts** and select legacy
+   customer accounts.
+2. In the Headless sales channel, grant the storefront permission to read and
+   write customers (`unauthenticated_read_customers` and
+   `unauthenticated_write_customers`).
+3. Restart the development server if you replace the Storefront API token after
+   changing its permissions.
+
+The user icon opens sign-in and create-account options. Registration collects
+every field supported by Shopify's legacy `CustomerCreateInput`: first name,
+last name, email, optional E.164 phone number, password, and email-marketing
+consent. Form values remain in place after validation or Shopify errors, and
+password fields include accessible visibility controls. Authenticated customers
+who revisit `/account/login` or `/account/register` are redirected to `/account`.
+The shorter `/login` and `/register` routes redirect to those canonical guest
+pages, or directly to `/account` when a customer session already exists.
+
+After login, an existing cart is associated with the customer through Shopify's
+buyer identity, and carts created later include the customer token at creation.
+Logout removes the association before revoking the customer session. Account
+orders and addresses are authenticated, uncached Storefront API reads. Order
+history is paginated to completion; spend is shown net of refunds and kept
+separate by currency when a customer has ordered through multiple Markets.
+The account-details editor lets signed-in customers change or remove their name
+and E.164 phone number, update their password, and opt in or out of email
+marketing through Shopify's authenticated `customerUpdate` mutation. Password
+changes store Shopify's replacement access token and update the cart buyer
+identity so the active browser remains signed in. When a store uses double
+opt-in, a requested marketing subscription can remain unconfirmed until the
+customer follows Shopify's email confirmation. Profile updates remain uncached.
+Customers can review all saved addresses and add a new address, optionally
+making it their primary shipping address. Existing addresses include edit,
+delete, and make-primary actions. Selecting a country loads its states or
+provinces; city is always entered as free text because city coverage varies by
+dataset. The server normalizes the selected country and province and trims the
+city value. Location options are public and cached, while customer addresses and
+mutations remain uncached.
+
+New Shopify customer accounts use passwordless email codes and require a
+different Customer Account API OAuth flow.
+
+## Connect Sanity and edit storefront content
+
+The repository contains a standalone Sanity Studio in `studio/`. It owns the
+homepage banner, header logo, optional site-name override, primary navigation
+with one level of child links, and the complete footer.
+
+1. Create or select a project at [sanity.io/manage](https://www.sanity.io/manage).
+2. Add the project values to the root `.env.local`:
+
+   ```dotenv
+   NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_SANITY_DATASET=production
+   SANITY_API_READ_TOKEN=
+   SANITY_API_VERSION=2026-08-27
+   ```
+
+3. Copy `studio/.env.example` to `studio/.env.local` and add the same project ID
+   and dataset.
+4. Restart `npm run dev`, then open
+   [http://localhost:3000/studio](http://localhost:3000/studio).
+5. Open the **Homepage** singleton and add up to five items under **Banner
+   carousel**. Upload each image, add its alternative text, title, description,
+   and optional CTA, then turn on **Show homepage banner** for every slide that
+   should appear. Drag items to reorder them and publish the document. The
+   existing Shopify introduction remains visible until at least one complete,
+   enabled banner is published.
+6. Open the **Site settings** singleton, edit the header and footer, and publish
+   it. Footer link columns are single-level; social-platform icons are selected
+   automatically from each configured platform.
+
+To add a Home link, set **Label** to `Home`, choose **Internal store path**, and
+enter `/` in **Internal path**. The **External website URL** option is only for
+complete `http://` or `https://` destinations; entering `/` there intentionally
+shows a validation message directing the editor back to the internal option.
+
+The Studio is embedded at `/studio` for convenient theme setup. You can also run
+the standalone Vite-powered editor with `npm run studio:dev` and open
+[http://localhost:3333](http://localhost:3333); this remains the faster option
+for day-to-day schema work and TypeGen workflows.
+
+The project ID and dataset are public identifiers. Keep
+`SANITY_API_READ_TOKEN` server-only; it is only required for a private dataset.
+Published homepage, header, and footer content is projected explicitly and
+validated with Zod. The homepage carousel uses its own 60-second
+`sanity-home-page` cache tag, while the header and footer share the 60-second
+site-settings cache tag. Banner images use responsive URLs served directly by
+Sanity's image CDN, capped at each uploaded asset's available width; this avoids
+unnecessary upscaling and a second pass through the Next.js image optimizer.
+Until Sanity is connected and the relevant singleton is published, these
+regions use Shopify-aware and theme-safe fallback content.
+
+## Connect Klaviyo newsletter signup
+
+The footer submits newsletter signups to Klaviyo's server-side bulk profile
+subscription endpoint. Create a private API key with `lists:write`,
+`profiles:write`, and `subscriptions:write` scopes, then add the target list and
+key to the root `.env.local`:
+
+```dotenv
+KLAVIYO_LIST_ID=your_list_id
+KLAVIYO_API_KEY=your_private_api_key
+```
+
+Restart the app after changing these values. Keep the `pk_` private key out of
+source control and never rename it with a `NEXT_PUBLIC_` prefix. Newsletter
+requests use `no-store`; Klaviyo applies the selected list's single- or
+double-opt-in behavior, so a subscriber may need to confirm by email.
+
+Shopify records email-marketing consent on customer profiles and can send
+campaigns through Shopify Email, but the Storefront API does not provide an
+email-only guest newsletter mutation for a headless storefront. The footer
+therefore uses Klaviyo for every valid address. When a legacy customer is signed
+in, the form is prefilled with their uncached Shopify email. Submitting that
+same address also updates the account's `acceptsMarketing` preference through
+the authenticated `customerUpdate` mutation. If the entered address differs
+from the account email, Klaviyo receives the subscription but the Shopify
+account remains unchanged. Store-level double opt-in can still require email
+confirmation.
+
+## Project structure
+
+```text
+src/
+  app/                       Storefront route group, embedded Studio, and global CSS
+  components/account/        Customer account forms and shared account layout
+  components/commerce/       Product, collection, cart, and predictive-search UI
+  components/editorial/      Sanity-driven interactive editorial UI
+  components/layout/         Responsive global header, footer, and mobile drawer
+  components/ui/             shadcn/ui component source
+  components/storefront/     Reusable storefront and Motion presentation
+  lib/sanity/                Sanity env, GROQ, caching, and Zod validation
+  lib/klaviyo/               Server-only newsletter config and subscription service
+  lib/locations/             Cached country and province/state validation
+  lib/shopify/client.ts      Storefront GraphQL transport and response validation
+  lib/shopify/graphql/       Fragments, queries, and generated operation artifacts
+  lib/shopify/schemas/       Runtime Zod schemas and inferred TypeScript types
+  lib/shopify/services/      Reusable Shopify data-access functions
+studio/
+  src/schemaTypes/           Homepage, site settings, navigation, and footer schemas
+  sanity.config.ts           Standalone Studio and singleton configuration
+```
+
+The homepage waits for an incoming request before reading environment variables,
+which makes the same deployment build usable with different runtime store
+configuration. The Shopify homepage catalog is cached for five minutes, while
+the public Sanity banner is cached independently for 60 seconds. Collection
+browse responses use Next.js's persistent fetch cache with 60-second
+revalidation, query-variable-aware cache keys, a global collection tag, and a
+handle-specific tag. Cart and customer requests always use `no-store` and are
+never placed in the shared cache. Klaviyo subscription mutations are also
+uncached.
+
+## Commands
+
+```bash
+npm run dev        # start the Turbopack development server
+npm run lint       # run ESLint
+npm run typecheck  # run TypeScript without emitting files
+npm run graphql:codegen # validate operations against Shopify and regenerate artifacts
+npm run build      # create a production build
+npm run start      # serve the production build
+npm run studio:dev       # start standalone Sanity Studio on localhost:3333
+npm run studio:typecheck # type-check the Studio workspace
+npm run studio:build     # build Studio (requires Studio env values)
+```
+
+## Extending the storefront
+
+- Add GraphQL documents to `src/lib/shopify/graphql` and regenerate their
+  artifacts with `npm run graphql:codegen`.
+- Add matching Zod schemas to `src/lib/shopify/schemas`; inferred types keep
+  API data and UI props synchronized.
+- Keep every Sanity request in `src/lib/sanity` and update its projected GROQ and
+  Zod schema together whenever homepage, header, or footer fields change.
+- Call `shopifyFetch` only from server-side modules. Pass a buyer IP when making
+  buyer-driven private-token requests so Shopify can apply buyer-level traffic
+  protection correctly.
+- Add shadcn/ui components with `npx shadcn@latest add <component>`.
+- Keep Shopify product images on `cdn.shopify.com`, or add narrowly scoped image
+  hosts to `next.config.ts` when an integration returns another trusted domain.
+
+## Change documentation
+
+Every feature, fix, dependency change, configuration adjustment, and meaningful
+documentation update must be recorded in [`changes.md`](./changes.md). The same
+rule is included in `AGENTS.md` for future coding-agent sessions.
+
+## Official references
+
+- [Next.js App Router documentation](https://nextjs.org/docs/app)
+- [Shopify Storefront API setup](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/getting-started)
+- [Shopify Storefront API reference](https://shopify.dev/docs/api/storefront/latest)
+- [Shopify customer email consent](https://shopify.dev/docs/storefronts/themes/customer-engagement/email-consent)
+- [Shopify customerUpdate mutation](https://shopify.dev/docs/api/storefront/latest/mutations/customerUpdate)
+- [Sanity with Next.js](https://www.sanity.io/docs/nextjs)
+- [Sanity Structure Builder](https://www.sanity.io/docs/studio/structure-builder-reference)
+- [Klaviyo API authentication](https://developers.klaviyo.com/en/v2026-01-15/docs/authenticate_)
+- [Klaviyo bulk profile subscription](https://developers.klaviyo.com/en/reference/bulk_subscribe_profiles)
+- [shadcn/ui for Next.js](https://ui.shadcn.com/docs/installation/next)
+- [Motion for React](https://motion.dev/docs/react)
+- [Embla Carousel for React](https://www.embla-carousel.com/get-started/react/)
+- [Zod documentation](https://zod.dev/)
+- [Countries States Cities Database](https://github.com/dr5hn/countries-states-cities-database)
+
+Country and state/province data is provided by the Countries States Cities
+Database under the Open Database License (ODbL) v1.0.

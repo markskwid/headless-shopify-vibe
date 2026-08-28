@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title description">
+  <title id="title">Collection placeholder</title>
+  <desc id="description">Abstract neutral shapes representing a product collection.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4f4f0"/>
+      <stop offset="1" stop-color="#deded7"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#ecece6" stop-opacity=".9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#background)"/>
+  <circle cx="1020" cy="70" r="320" fill="#d1dacb" opacity=".75"/>
+  <circle cx="130" cy="850" r="330" fill="#dfd3c4" opacity=".7"/>
+  <g transform="translate(250 190)" fill="url(#card)" stroke="#151515" stroke-opacity=".1" stroke-width="3">
+    <rect x="0" y="100" width="290" height="390" rx="32" transform="rotate(-8 145 295)"/>
+    <rect x="410" y="100" width="290" height="390" rx="32" transform="rotate(8 555 295)"/>
+    <rect x="205" y="0" width="290" height="500" rx="36"/>
+  </g>
+  <g fill="#151515" opacity=".16">
+    <rect x="510" y="355" width="180" height="18" rx="9"/>
+    <rect x="540" y="397" width="120" height="12" rx="6"/>
+  </g>
+</svg>
