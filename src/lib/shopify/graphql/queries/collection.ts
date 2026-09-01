@@ -1,13 +1,17 @@
 import {
   COLLECTION_CARD_FRAGMENT,
   PRODUCT_FILTER_FRAGMENT,
+  PRODUCT_PAGE_INFO_FRAGMENT,
 } from "../fragments/collection";
 import { PRODUCT_CARD_FRAGMENT } from "../fragments/product";
 
 export const COLLECTION_QUERY = `#graphql
   query Collection(
     $handle: String!
-    $first: Int!
+    $first: Int
+    $last: Int
+    $after: String
+    $before: String
     $filters: [ProductFilter!]
     $sortKey: ProductCollectionSortKeys!
     $reverse: Boolean!
@@ -24,6 +28,9 @@ export const COLLECTION_QUERY = `#graphql
       }
       products(
         first: $first
+        last: $last
+        after: $after
+        before: $before
         filters: $filters
         sortKey: $sortKey
         reverse: $reverse
@@ -34,10 +41,14 @@ export const COLLECTION_QUERY = `#graphql
         filters {
           ...ProductFilterFields
         }
+        pageInfo {
+          ...ProductPageInfoFields
+        }
       }
     }
   }
   ${COLLECTION_CARD_FRAGMENT}
   ${PRODUCT_CARD_FRAGMENT}
   ${PRODUCT_FILTER_FRAGMENT}
+  ${PRODUCT_PAGE_INFO_FRAGMENT}
 `;

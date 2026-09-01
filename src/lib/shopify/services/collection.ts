@@ -13,14 +13,38 @@ import {
   type ShopifyProductFilter,
 } from "../schemas/collection";
 
-const browseInputSchema = z.object({
+const paginationCursorSchema = z.string().trim().min(1).max(2048);
+
+const browseInputFields = {
   filters: z.array(productFilterInputSchema).max(25).default([]),
   sort: collectionSortValueSchema.default("featured"),
-});
+  after: paginationCursorSchema.nullable().default(null),
+  before: paginationCursorSchema.nullable().default(null),
+};
 
-const collectionInputSchema = browseInputSchema.extend({
-  handle: collectionHandleSchema,
-});
+function normalizeBrowseCursors<
+  TInput extends { after: string | null; before: string | null },
+>(input: TInput) {
+  return input.after && input.before
+    ? { ...input, after: null, before: null }
+    : input;
+}
+
+const browseInputSchema = z
+  .object(browseInputFields)
+  .transform(normalizeBrowseCursors);
+
+const collectionInputSchema = z
+  .object({ ...browseInputFields, handle: collectionHandleSchema })
+  .transform(normalizeBrowseCursors);
+
+const PRODUCTS_PER_PAGE = 10;
+const EMPTY_PAGE_INFO = {
+  hasNextPage: false,
+  hasPreviousPage: false,
+  startCursor: null,
+  endCursor: null,
+} as const;
 
 const collectionSort = {
   featured: { sortKey: "COLLECTION_DEFAULT", reverse: false },
@@ -55,16 +79,39 @@ function retainFullPriceRange<
   };
 }
 
+function productPaginationVariables({
+  after,
+  before,
+}: {
+  after: string | null;
+  before: string | null;
+}) {
+  return before
+    ? {
+        first: null,
+        last: PRODUCTS_PER_PAGE,
+        after: null,
+        before,
+      }
+    : {
+        first: PRODUCTS_PER_PAGE,
+        last: null,
+        after,
+        before: null,
+      };
+}
+
 export async function getCollection(input: unknown) {
-  const { handle, filters, sort } = collectionInputSchema.parse(input);
+  const { after, before, handle, filters, sort } =
+    collectionInputSchema.parse(input);
   const sorting = collectionSort[sort];
   const response = await shopifyFetch({
     query: COLLECTION_QUERY,
     schema: collectionResponseSchema,
     variables: {
       handle,
-      first: 24,
       filters,
+      ...productPaginationVariables({ after, before }),
       ...sorting,
     },
     revalidate: 60,
@@ -84,15 +131,15 @@ export async function getCollection(input: unknown) {
 }
 
 export function getAllProducts(input: unknown = {}) {
-  const { filters, sort } = browseInputSchema.parse(input);
+  const { after, before, filters, sort } = browseInputSchema.parse(input);
   const sorting = collectionSort[sort];
 
   return shopifyFetch({
     query: ALL_PRODUCTS_QUERY,
     schema: allProductsResponseSchema,
     variables: {
-      first: 24,
       filters,
+      ...productPaginationVariables({ after, before }),
       ...sorting,
     },
     revalidate: 60,
@@ -107,7 +154,7 @@ export function getAllProducts(input: unknown = {}) {
           response.collection.products,
           response.collection.unfilteredProducts.filters,
         )
-      : { nodes: [], filters: [] },
+      : { nodes: [], filters: [], pageInfo: EMPTY_PAGE_INFO },
     currencyCode: response.paymentSettings.currencyCode,
   }));
 }

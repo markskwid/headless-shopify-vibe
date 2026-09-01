@@ -4,17 +4,20 @@
  */
 
 export const SHOPIFY_STOREFRONT_API_VERSION = "2026-07" as const;
-export const SHOPIFY_STOREFRONT_DOCUMENT_HASH = "a1756642d4a8c068b6fc3adfef473ec75939fe66cbc75466278b9a7e87705188" as const;
+export const SHOPIFY_STOREFRONT_DOCUMENT_HASH = "69e8321dd6b9f1fb2e93bbf5a883a00504adacbf4708ecff2428640e7e3b9bb1" as const;
 export const SHOPIFY_STOREFRONT_OPERATIONS = {
   "AllProducts": {
     "kind": "query",
     "variables": [
-      "$first: Int!",
+      "$first: Int",
+      "$last: Int",
+      "$after: String",
+      "$before: String",
       "$filters: [ProductFilter!]",
       "$sortKey: ProductCollectionSortKeys!",
       "$reverse: Boolean!"
     ],
-    "hash": "44b008cf4d59b5a0c8c7c66da22134f54cc42a58ae5a665f7917e83bbac8596c"
+    "hash": "d95c8fddd33c75c170bbd33f6354f9d699ae9671a414f2ba03dbbfe49496fdb4"
   },
   "Cart": {
     "kind": "query",
@@ -82,12 +85,15 @@ export const SHOPIFY_STOREFRONT_OPERATIONS = {
     "kind": "query",
     "variables": [
       "$handle: String!",
-      "$first: Int!",
+      "$first: Int",
+      "$last: Int",
+      "$after: String",
+      "$before: String",
       "$filters: [ProductFilter!]",
       "$sortKey: ProductCollectionSortKeys!",
       "$reverse: Boolean!"
     ],
-    "hash": "914feb24e2e997b4b35761d4a642c10d46406df8310535a764e02788a449ef09"
+    "hash": "783b9673b7cbcfe24bf4484ecbef30665647c3da6d9182f9e69190088a24eebe"
   },
   "Customer": {
     "kind": "query",
@@ -194,7 +200,7 @@ export const SHOPIFY_STOREFRONT_OPERATIONS = {
     "variables": [
       "$handle: String!"
     ],
-    "hash": "780fab87c3a9ea5bfd3ffb75ce14c3bec312129a4991e0671d5ce7b714fc7b29"
+    "hash": "2bff6d1230f6f6c85264ae3e674f6695eefea4a46ed9c1c54a6a9cd48f1e41b3"
   },
   "ProductRecommendations": {
     "kind": "query",
@@ -211,6 +217,14 @@ export const SHOPIFY_STOREFRONT_OPERATIONS = {
     ],
     "hash": "d5df6ff774b37169e03cdb5c8ef61e4ceb4e176c51dbe906b77ec53f77ce5c95"
   },
+  "SitemapResources": {
+    "kind": "query",
+    "variables": [
+      "$type: SitemapType!",
+      "$page: Int!"
+    ],
+    "hash": "fc352e87283fc7dca33a510bbd3b528e13bd0d95bb2105f52d170a3aeb2bbf64"
+  },
   "StorefrontHome": {
     "kind": "query",
     "variables": [
@@ -222,7 +236,7 @@ export const SHOPIFY_STOREFRONT_OPERATIONS = {
   "StorefrontIdentity": {
     "kind": "query",
     "variables": [],
-    "hash": "207f6f4fa706906d7b424483c97e17a2a234de8996cf91cea004e1f73cbc248e"
+    "hash": "1e8b70a0d008b0db24617f63142187de175b62d1096d8a892ebb32aff3a10130"
   }
 } as const;
 

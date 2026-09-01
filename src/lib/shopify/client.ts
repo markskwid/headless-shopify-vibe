@@ -17,6 +17,8 @@ const graphQlResponseSchema = z.object({
     .optional(),
 });
 
+const SHOPIFY_REQUEST_TIMEOUT_MS = 12_000;
+
 type ShopifyFetchOptions<TSchema extends z.ZodType> = {
   query: string;
   schema: TSchema;
@@ -54,7 +56,10 @@ async function fetchShopify(
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      return await fetch(url, request);
+      return await fetch(url, {
+        ...request,
+        signal: AbortSignal.timeout(SHOPIFY_REQUEST_TIMEOUT_MS),
+      });
     } catch (error) {
       lastError = error;
 

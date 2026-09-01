@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { httpsUrlSchema } from "@/lib/validation/url";
+
 import { moneySchema } from "./product";
 
 export const customerEmailSchema = z
@@ -94,7 +96,7 @@ const customerOrderSchema = z.object({
           .object({
             image: z
               .object({
-                url: z.url(),
+                url: httpsUrlSchema,
                 altText: z.string().nullable(),
                 width: z.number().int().positive().nullable(),
                 height: z.number().int().positive().nullable(),
@@ -105,7 +107,7 @@ const customerOrderSchema = z.object({
       }),
     ),
   }),
-  statusUrl: z.url(),
+  statusUrl: httpsUrlSchema,
 });
 
 export const customerAccountProfileSchema = customerProfileSchema.extend({

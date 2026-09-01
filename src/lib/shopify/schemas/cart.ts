@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { httpsUrlSchema } from "@/lib/validation/url";
+
 import { moneySchema, productImageSchema } from "./product";
 
 export const cartIdSchema = z
@@ -43,7 +45,7 @@ export const cartLineSchema = z.object({
 
 export const cartSchema = z.object({
   id: cartIdSchema,
-  checkoutUrl: z.url(),
+  checkoutUrl: httpsUrlSchema,
   totalQuantity: z.number().int().nonnegative(),
   note: z.string().nullable(),
   discountCodes: z.array(

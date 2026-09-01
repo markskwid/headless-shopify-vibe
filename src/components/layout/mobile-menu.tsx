@@ -62,8 +62,10 @@ export function MobileMenu({ logo, name, navigation }: MobileMenuProps) {
   return (
     <Sheet>
       <SheetTrigger
+        nativeButton
         render={
           <Button
+            type="button"
             variant="ghost"
             size="icon"
             className="size-9 justify-self-start rounded-full sm:size-10"

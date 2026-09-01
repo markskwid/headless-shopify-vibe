@@ -1,6 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PackageOpen, SlidersHorizontal, X } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  PackageOpen,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 
 import { ProductCard } from "@/components/commerce/product-card";
 import { CollectionSortSelect } from "@/components/commerce/collection-sort-select";
@@ -11,6 +17,7 @@ import type {
   CollectionCardData,
   CollectionSortValue,
   ProductFilterPriceRange,
+  ProductPageInfo,
   ShopifyProductFilter,
   StorefrontProduct,
 } from "@/lib/shopify";
@@ -25,12 +32,98 @@ type CollectionBrowserProps = {
   collection: Pick<CollectionCardData, "title" | "description" | "image">;
   currencyCode: string;
   filters: ShopifyProductFilter[];
+  pageInfo: ProductPageInfo;
   pathname: string;
   products: StorefrontProduct[];
   selectedFilters: string[];
   selectedPriceRange: ProductFilterPriceRange | null;
   sort: CollectionSortValue;
 };
+
+function collectionPageHref({
+  cursor,
+  direction,
+  pathname,
+  selectedFilters,
+  sort,
+}: {
+  cursor: string;
+  direction: "after" | "before";
+  pathname: string;
+  selectedFilters: string[];
+  sort: CollectionSortValue;
+}) {
+  const params = new URLSearchParams({ sort });
+
+  selectedFilters.forEach((filter) => params.append("filter", filter));
+  params.set(direction, cursor);
+
+  return `${pathname}?${params.toString()}`;
+}
+
+function CollectionPagination({
+  pageInfo,
+  pathname,
+  selectedFilters,
+  sort,
+}: Pick<
+  CollectionBrowserProps,
+  "pageInfo" | "pathname" | "selectedFilters" | "sort"
+>) {
+  const previousCursor = pageInfo.hasPreviousPage
+    ? pageInfo.startCursor
+    : null;
+  const nextCursor = pageInfo.hasNextPage ? pageInfo.endCursor : null;
+
+  if (!previousCursor && !nextCursor) return null;
+
+  return (
+    <nav
+      className="mt-10 flex items-center justify-between gap-4 border-t pt-6"
+      aria-label="Collection pagination"
+    >
+      {previousCursor ? (
+        <Link
+          href={collectionPageHref({
+            cursor: previousCursor,
+            direction: "before",
+            pathname,
+            selectedFilters,
+            sort,
+          })}
+          className={buttonVariants({ variant: "outline", size: "lg" })}
+        >
+          <ChevronLeft data-icon="inline-start" aria-hidden="true" />
+          Previous
+        </Link>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+
+      <span className="hidden text-sm text-muted-foreground sm:inline">
+        Browse more products
+      </span>
+
+      {nextCursor ? (
+        <Link
+          href={collectionPageHref({
+            cursor: nextCursor,
+            direction: "after",
+            pathname,
+            selectedFilters,
+            sort,
+          })}
+          className={buttonVariants({ variant: "outline", size: "lg" })}
+        >
+          Next
+          <ChevronRight data-icon="inline-end" aria-hidden="true" />
+        </Link>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+    </nav>
+  );
+}
 
 type FilterFormProps = Pick<
   CollectionBrowserProps,
@@ -140,6 +233,7 @@ export function CollectionBrowser({
   collection,
   currencyCode,
   filters,
+  pageInfo,
   pathname,
   products,
   selectedFilters,
@@ -183,6 +277,9 @@ export function CollectionBrowser({
           <p className="mt-1 text-sm text-muted-foreground">
             Showing {products.length}{" "}
             {products.length === 1 ? "product" : "products"}
+            {pageInfo.hasNextPage || pageInfo.hasPreviousPage
+              ? " on this page"
+              : ""}
           </p>
         </div>
         <CollectionSortSelect
@@ -257,35 +354,44 @@ export function CollectionBrowser({
           </div>
         </aside>
 
-        {products.length ? (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <Card className="h-fit border-dashed py-16 text-center">
-            <CardContent>
-              <PackageOpen className="mx-auto size-7 text-muted-foreground" />
-              <p className="mt-4 font-medium">
-                {hasActiveFilters
-                  ? "No products match these filters."
-                  : "No products are available yet."}
-              </p>
-              {hasActiveFilters ? (
-                <Link
-                  href={pathname}
-                  className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "mt-5",
-                  )}
-                >
-                  Clear filters
-                </Link>
-              ) : null}
-            </CardContent>
-          </Card>
-        )}
+        <div className="min-w-0">
+          {products.length ? (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <Card className="h-fit border-dashed py-16 text-center">
+              <CardContent>
+                <PackageOpen className="mx-auto size-7 text-muted-foreground" />
+                <p className="mt-4 font-medium">
+                  {hasActiveFilters
+                    ? "No products match these filters."
+                    : "No products are available yet."}
+                </p>
+                {hasActiveFilters ? (
+                  <Link
+                    href={pathname}
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "mt-5",
+                    )}
+                  >
+                    Clear filters
+                  </Link>
+                ) : null}
+              </CardContent>
+            </Card>
+          )}
+
+          <CollectionPagination
+            pageInfo={pageInfo}
+            pathname={pathname}
+            selectedFilters={selectedFilters}
+            sort={sort}
+          />
+        </div>
       </div>
     </main>
   );

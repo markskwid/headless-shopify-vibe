@@ -12,6 +12,7 @@ import { parseBuyerIp } from "@/lib/shopify/utils/buyer-ip";
 export const metadata: Metadata = {
   title: "My account",
   description: "View your Shopify customer account details.",
+  robots: "noindex, nofollow",
 };
 
 export default async function AccountPage() {

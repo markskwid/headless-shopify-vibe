@@ -3,6 +3,158 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-01 - Reusable Shopify and Sanity core branch
+
+- Established `clean/shopify-sanity-core` as the reusable distribution for
+  Shopify commerce, Sanity editorial content, SEO, sitemap generation, and
+  authenticated cache webhooks. Added a persistent branch policy requiring
+  future generally reusable Shopify/Sanity features to be ported here.
+- Removed the optional Upstash rate-limit dependencies and environment keys,
+  distributed/in-process abuse-limit implementation, proxy-specific request-IP
+  trust, global CSP/security-header proxy, hardened-cookie migration, and
+  security deployment document from this branch. Restored the original account,
+  cart, newsletter, location, search, session, and footer implementations.
+- Retained server-only credentials, HTTP-only session identifiers, Zod boundary
+  validation, HTTPS-safe editorial destinations, and provider signature checks
+  required by Shopify and Sanity webhooks. Moved bounded webhook-body handling
+  into a provider-neutral `src/lib/webhooks` module.
+- Added the core regression-test script and made the root layout independently
+  type-checkable before a first Next.js build generates route helper types.
+- Documented that production adopters choose their own rate limiting, WAF/CDN,
+  response headers, monitoring, and incident controls. No Shopify GraphQL
+  operation, generated artifact, API version, Sanity content, or external
+  environment migration is required.
+
+## 2026-09-01 - Mobile menu trigger semantics
+
+- Corrected the mobile navigation Sheet trigger's Base UI contract by marking
+  its rendered shadcn/Base UI Button as a native button and explicitly setting
+  `type="button"`. This removes the development warning about applying
+  non-native button behavior to an actual `<button>` and avoids unintended
+  ARIA/role attributes while preserving the existing appearance and drawer
+  interaction.
+- No dependency, environment, content, Shopify GraphQL artifact, or API-version
+  change is required. Restart an already-running development server if its
+  compiled client still displays the previous warning.
+
+## 2026-09-01 - Sanity editorial and legal page builder
+
+- Added a reusable Sanity `editorialPage` document for root-level About,
+  Contact, FAQ, Shipping and returns, Privacy policy, Terms, and future
+  editorial pages. Documents include validated non-reserved slugs, ordered
+  page-builder sections, page-specific SEO fallbacks, social images, and an
+  optional `noindex` setting; no existing content migration is required.
+- Added focused Page hero, rich-text, FAQ, contact-details, and callout object
+  types with accessible authoring constraints, stable array keys, required
+  image alternative text, secure rich-text links, clear block previews, and a
+  maximum of one first-position hero per page.
+- Added an Editorial pages Studio list and expanded reusable navigation fields
+  with strong editorial-page references. Header links, nested header links,
+  footer links, homepage CTAs, and editorial CTAs now resolve current page slugs
+  through GROQ while retaining existing internal-path and HTTPS destinations.
+- Added a validated, server-only editorial-page query and service with explicit
+  projections, five-minute fallback revalidation, provider/page/slug cache
+  tags, and graceful behavior when Sanity is not configured. Portable Text,
+  every builder block, images, links, metadata, sitemap records, and route slugs
+  are validated with Zod at the Sanity boundary.
+- Added a responsive root `/<slug>` Server Component route with page-builder
+  rendering, eager above-the-fold hero images, semantic headings, native FAQ
+  disclosures, contact links, safe external-link behavior, canonical metadata,
+  social cards, `noindex` support, breadcrumb structured data, and the existing
+  branded 404 behavior for invalid, missing, or unpublished pages.
+- Added indexable editorial pages to the generated sitemap with Sanity update
+  timestamps and expanded the recommended Sanity webhook filter to include
+  `editorialPage`, allowing published changes and deletions to invalidate the
+  shared Sanity cache after deployment. Updated README authoring, navigation,
+  caching, webhook, and project-structure guidance. No dependency, environment,
+  Shopify GraphQL artifact, or API-version change was required.
+
+## 2026-09-01 - Authenticated Shopify and Sanity cache webhooks
+
+- Added `POST /api/webhooks/shopify` for HTTPS webhook deliveries. The handler
+  reads the untouched bounded JSON body, verifies Shopify's base64 HMAC-SHA256
+  in constant time with a server-only app client secret, validates delivery
+  headers and payloads with Zod, and rejects deliveries whose shop domain does
+  not match the configured `myshopify.com` store.
+- Added `POST /api/webhooks/sanity` using `next-sanity`'s signed-body parser,
+  Content Lake propagation delay, configured-dataset verification, bounded JSON
+  bodies, and Zod validation. The recommended GROQ filter targets only the
+  published `siteSettings`, `homePage`, and `editorialPage` documents consumed by the
+  storefront, avoiding draft-keystroke webhook traffic.
+- Added a provider-wide `sanity` tag to every cached Sanity fetch, matching the
+  existing provider-wide `shopify` tag. Valid Shopify deliveries immediately
+  expire all public Shopify fetch caches and the generated sitemap; valid Sanity
+  deliveries immediately expire all Sanity fetch caches. Existing time-based
+  revalidation remains the outage/misconfiguration fallback, while carts,
+  customer sessions, authenticated data, and mutations remain uncached.
+- Expanded product-detail, recommendation, and storefront-home cache tags so
+  inventory, product, collection, and store-identity changes also participate
+  in granular invalidation and future webhook routing.
+- Added `SHOPIFY_WEBHOOK_SECRET` and `SANITY_REVALIDATE_SECRET` placeholders and
+  documented their distinct ownership, HTTPS endpoints, recommended Shopify
+  catalog topics, Sanity filter/projection, testing, delivery monitoring, and
+  production checklist requirements. Existing deployments must configure both
+  secrets and create the external subscriptions before on-demand invalidation
+  becomes active; no content or data migration is required.
+- Added regression tests for exact raw-body Shopify HMAC verification, tamper
+  rejection, JSON content-type enforcement, and declared/actual webhook body
+  limits. No dependency, Shopify Storefront GraphQL operation, generated
+  artifact, or API-version change was required.
+- Retained the Next.js 16.3 development server's managed `AGENTS.md` guidance,
+  which directs future coding work to the installed version-specific framework
+  docs and prevents `next dev` from repeatedly dirtying the working tree.
+
+## 2026-09-01 - Storefront SEO
+
+- Added a validated `STOREFRONT_BASE_URL` setting for the public headless origin
+  used by canonical metadata, structured data, `robots.txt`, and `sitemap.xml`.
+  Existing deployments should set it to their customer-facing HTTPS domain;
+  Vercel production URLs and localhost remain development/platform fallbacks.
+- Added Sanity-editable global SEO defaults for the homepage title, description,
+  and social sharing image. The existing Site settings singleton now owns these
+  optional overrides, with Shopify shop identity and safe starter copy as
+  fallbacks. No existing Sanity content migration is required.
+- Added canonical URLs plus Open Graph and X/Twitter cards to the homepage,
+  products, and collections. Product and collection pages use Shopify's native
+  SEO fields before their normal title/description, while featured images are
+  validated and reused for social previews. Collection canonicals intentionally
+  omit sorting, filtering, and cursor parameters.
+- Added HTML-safe JSON-LD for the storefront Organization and
+  WebSite, product Offer availability/pricing, and product/collection
+  breadcrumbs. Account, authentication, cart, and search pages remain excluded
+  from indexing.
+- Added generated `robots.txt` and an hourly cached sitemap containing the home
+  and all-products routes plus Shopify Storefront sitemap resources for every
+  implemented product and collection page. Empty Shopify sitemap pages are
+  handled using `hasNextPage`, responses are Zod-validated, and user-specific
+  data is never cached into the sitemap.
+- Expanded the Shopify product, collection, variant, and shop operations and
+  matching Zod schemas with SEO, product type, SKU, and description data.
+  Regenerated and validated all 29 Storefront operations against API version
+  2026-07; no Storefront API version or dependency changed.
+- Documented SEO ownership, sitemap caching, structured data, canonical URL
+  behavior, Sanity authoring, and the required public URL in README.
+
+## 2026-08-28 - Collection cursor pagination
+
+- Added Shopify cursor pagination to every collection route, including
+  `/collections/all`, with 24 products per page and responsive Previous/Next
+  controls. Pagination URLs retain the selected sort value and every validated
+  Shopify Search & Discovery filter, including price range filters.
+- Added strict `after` and `before` query-parameter parsing with length limits
+  and ambiguous-cursor rejection. Applying filters or changing the automatic
+  sort intentionally removes the cursor and returns the customer to the first
+  page of the new result set.
+- Expanded the `Collection` and `AllProducts` Storefront API queries with
+  nullable forward/backward cursor variables and a reusable `PageInfo`
+  fragment. Added matching Zod response validation, directional `first`/`last`
+  service variables, cursor-aware cached request bodies, and safe empty-state
+  pagination metadata.
+- Validated and regenerated all 28 Shopify Storefront operations against API
+  version 2026-07. Updated README browsing and caching documentation and
+  corrected its stale add-to-cart description. No dependency, environment
+  variable, content migration, or API-version change was required.
+
 ## 2026-08-28 - Sanity homepage banner carousel and image delivery fix
 
 - Replaced the single homepage banner editor with a reorderable Sanity array of

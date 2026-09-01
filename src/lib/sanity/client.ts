@@ -32,6 +32,8 @@ export async function sanityFetch<TSchema extends z.ZodType>(
     perspective: "published",
     useCdn: true,
     stega: false,
+    timeout: 10_000,
+    maxRetries: 2,
   });
 
   let response: unknown;
@@ -40,7 +42,7 @@ export async function sanityFetch<TSchema extends z.ZodType>(
     response = await client.fetch(options.query, options.params ?? {}, {
       next: {
         revalidate: options.revalidate ?? 60,
-        tags: options.tags ?? [],
+        tags: ["sanity", ...(options.tags ?? [])],
       },
     });
   } catch (error) {

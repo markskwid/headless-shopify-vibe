@@ -1,7 +1,7 @@
 import { defineField } from "sanity";
 
 type NavigationLinkParent = {
-  linkType?: "external" | "internal";
+  linkType?: "editorialPage" | "external" | "internal";
 };
 
 export const navigationLinkFields = [
@@ -16,15 +16,31 @@ export const navigationLinkFields = [
     title: "Destination type",
     type: "string",
     initialValue: "internal",
-    description: "Choose Internal path for storefront routes, including Home (/).",
+    description: "Choose an editorial page, a storefront route, or an external website.",
     options: {
       layout: "radio",
       list: [
+        { title: "Editorial page", value: "editorialPage" },
         { title: "Internal store path", value: "internal" },
         { title: "External website URL", value: "external" },
       ],
     },
     validation: (rule) => rule.required(),
+  }),
+  defineField({
+    name: "editorialPage",
+    title: "Editorial page",
+    type: "reference",
+    to: [{ type: "editorialPage" }],
+    hidden: ({ parent }) =>
+      (parent as NavigationLinkParent | undefined)?.linkType !== "editorialPage",
+    validation: (rule) =>
+      rule.custom((value, context) => {
+        const parent = context.parent as NavigationLinkParent | undefined;
+        return parent?.linkType !== "editorialPage" || value
+          ? true
+          : "Choose an editorial page.";
+      }),
   }),
   defineField({
     name: "internalPath",
@@ -39,7 +55,10 @@ export const navigationLinkFields = [
 
         if (parent?.linkType !== "internal") return true;
         if (!value) return "Add an internal path.";
-        if (!value.startsWith("/") && !value.startsWith("#")) {
+        if (
+          (!value.startsWith("/") && !value.startsWith("#")) ||
+          value.startsWith("//")
+        ) {
           return "Internal paths must start with / or #.";
         }
 
@@ -65,11 +84,11 @@ export const navigationLinkFields = [
 
         try {
           const url = new URL(value);
-          return url.protocol === "http:" || url.protocol === "https:"
+          return url.protocol === "https:"
             ? true
-            : "External URLs must start with http:// or https://.";
+            : "External URLs must start with https://.";
         } catch {
-          return "Enter a complete external URL starting with http:// or https://.";
+          return "Enter a complete external URL starting with https://.";
         }
       }),
   }),

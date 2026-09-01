@@ -5,6 +5,11 @@ import { z } from "zod";
 const emptyStringToUndefined = (value: unknown) =>
   typeof value === "string" && value.trim() === "" ? undefined : value;
 
+const webhookSecretSchema = z.preprocess(
+  emptyStringToUndefined,
+  z.string().trim().min(32).max(256).optional(),
+);
+
 const sanityEnvSchema = z.object({
   projectId: z.preprocess(
     emptyStringToUndefined,
@@ -94,6 +99,10 @@ export function requireSanityConfig(): SanityConfig {
   }
 
   return result.config;
+}
+
+export function getSanityWebhookSecret() {
+  return webhookSecretSchema.parse(process.env.SANITY_REVALIDATE_SECRET);
 }
 
 export class SanityConfigurationError extends Error {

@@ -12,8 +12,9 @@ The Sanity-editable global header includes Shopify-powered predictive product se
 300 ms after typing, previews up to six products, handles empty and failed
 searches, and links to a complete `/search` results page. Search result products
 open theme-native `/products/[handle]` pages with a draggable Embla image gallery,
-thumbnails, variant-driven image and price updates, a presentational add-to-cart
-control, and an Embla carousel of Shopify-generated related products.
+thumbnails, variant-driven image and price updates, a Shopify Cart API-backed
+add-to-cart control, and an Embla carousel of Shopify-generated related
+products.
 
 The homepage can use a Sanity-managed carousel containing up to five reorderable
 banners. Every banner has an image, title, description, enable toggle, and
@@ -24,7 +25,17 @@ homepage also presents the six most recently updated Shopify collections with
 their title, description, featured image, and a built-in fallback image. Every
 collection route, including `/collections/all`, supports Shopify-native Search
 & Discovery filters, a currency-aware price-range slider, and automatic
-URL-based sorting for shareable browse states.
+URL-based sorting for shareable browse states. Cursor-based Previous and Next
+pagination loads 24 products at a time while retaining the active sort and all
+selected filters in the URL.
+
+Root-level editorial and legal pages are also built in Sanity. Editors can
+compose About, Contact, FAQ, Shipping and returns, Privacy policy, Terms, and
+other pages from ordered hero, rich-text, FAQ, contact-details, and callout
+sections. Each page owns its slug, search metadata, social image, and optional
+`noindex` setting. Header, child-navigation, footer, hero, and callout links can
+reference an editorial page directly, so a later slug change updates those
+destinations automatically.
 
 Missing routes and unavailable Shopify products or collections render a branded
 404 page with the normal storefront shell and recovery links. Unmatched routes
@@ -63,7 +74,8 @@ into Shopify email marketing. The private API key never reaches the browser.
 - npm
 - A Shopify store with products published to the Headless sales channel
 - Legacy customer accounts for the included email/password account experience
-- A Sanity project for editable homepage, header, and footer content
+- A Sanity project for editable homepage, editorial pages, navigation, footer,
+  and SEO defaults
 - A Klaviyo list and scoped private API key for newsletter subscriptions
 
 ## Quick start
@@ -93,13 +105,18 @@ If Windows PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`.
 4. Set the permanent `your-store.myshopify.com` domain.
 5. Add either a private or public Storefront API access token. A private token is
    preferred because all API calls in this starter run on the server.
-6. Restart `npm run dev` after changing environment variables.
+6. Set `STOREFRONT_BASE_URL` to the public headless storefront URL. This is the
+   canonical origin used in metadata, structured data, `robots.txt`, and
+   `sitemap.xml`; do not use the `myshopify.com` domain unless it is genuinely
+   the customer-facing headless URL.
+7. Restart `npm run dev` after changing environment variables.
 
 ```dotenv
 SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
 SHOPIFY_STOREFRONT_PRIVATE_ACCESS_TOKEN=your_private_token
 SHOPIFY_STOREFRONT_PUBLIC_ACCESS_TOKEN=
 SHOPIFY_STOREFRONT_API_VERSION=2026-07
+STOREFRONT_BASE_URL=https://www.example.com
 ```
 
 Basic product and collection queries can use Shopify's tokenless Storefront API,
@@ -109,6 +126,80 @@ If both tokens are set, the private token takes precedence.
 
 Never commit `.env.local` or a private Storefront API token. The repository only
 tracks `.env.example`, which contains placeholders.
+
+## Configure cache-revalidation webhooks
+
+Time-based revalidation remains active as a fallback, but authenticated
+webhooks make published Shopify and Sanity changes invalidate their server data
+caches immediately. Both endpoints accept only JSON, enforce bounded bodies,
+return `Cache-Control: no-store`, and reject unsigned deliveries.
+
+### Shopify
+
+Add the client secret belonging to the Shopify app that owns the webhook
+subscriptions. This is not the Storefront API token:
+
+```dotenv
+SHOPIFY_WEBHOOK_SECRET=your_shopify_app_client_secret
+```
+
+Point HTTPS subscriptions at:
+
+```text
+https://your-storefront.example/api/webhooks/shopify
+```
+
+Subscribe to the public-catalog events used by this storefront:
+
+- `products/create`, `products/update`, and `products/delete`
+- `collections/create`, `collections/update`, and `collections/delete`
+- `product_listings/add`, `product_listings/update`, and
+  `product_listings/remove`
+- `collection_listings/add`, `collection_listings/update`, and
+  `collection_listings/remove`
+- `inventory_levels/update`
+- `shop/update`
+
+Manage these as app-specific subscriptions in `shopify.app.toml` when this
+storefront is paired with a Shopify app, or create shop-specific subscriptions
+with the GraphQL Admin API. The endpoint verifies Shopify's
+`X-Shopify-Hmac-Sha256` against the untouched request bytes, validates the topic
+and payload boundaries, and confirms `X-Shopify-Shop-Domain` matches
+`SHOPIFY_STORE_DOMAIN`. Any valid subscribed topic expires the shared `shopify`
+cache tag and the generated sitemap; carts, customers, and mutations are
+unaffected because they use `no-store`.
+
+Use Shopify CLI to send a test delivery after deployment:
+
+```bash
+shopify app webhook trigger --api-version=2026-07 --address=https://your-storefront.example/api/webhooks/shopify --topic=products/update
+```
+
+### Sanity
+
+Generate a separate random secret of at least 32 characters and add it to the
+storefront environment:
+
+```dotenv
+SANITY_REVALIDATE_SECRET=your_random_sanity_webhook_secret
+```
+
+In **Sanity Manage → API → Webhooks**, create a GROQ-powered webhook with:
+
+- URL: `https://your-storefront.example/api/webhooks/sanity`
+- Dataset: the value of `NEXT_PUBLIC_SANITY_DATASET`
+- Trigger on: create, update, and delete
+- Filter: `coalesce(after()._type, before()._type) in ["siteSettings", "homePage", "editorialPage"]`
+- Projection: `{ "_id": coalesce(after()._id, before()._id), "_type": coalesce(after()._type, before()._type) }`
+- Secret: the same `SANITY_REVALIDATE_SECRET`
+- Drafts and release versions: disabled
+
+The endpoint uses Sanity's signed-body verifier, checks the delivery dataset,
+waits briefly for Content Lake/CDN propagation, validates the projected body,
+and expires the shared `sanity` cache tag. Restricting the webhook to the two
+published document types currently queried by the storefront avoids a delivery
+for every Studio keystroke. Use Sanity's webhook attempts log to verify a `200`
+response after publishing and deleting test content.
 
 ## Enable legacy customer accounts
 
@@ -182,14 +273,29 @@ with one level of child links, and the complete footer.
    should appear. Drag items to reorder them and publish the document. The
    existing Shopify introduction remains visible until at least one complete,
    enabled banner is published.
-6. Open the **Site settings** singleton, edit the header and footer, and publish
-   it. Footer link columns are single-level; social-platform icons are selected
+6. Open the **Site settings** singleton, edit the header, footer, and **SEO and
+   social sharing** defaults, then publish it. The SEO block accepts the default
+   homepage title, description, and a recommended 1200 × 630 sharing image.
+   Footer link columns are single-level; social-platform icons are selected
    automatically from each configured platform.
+7. Open **Editorial pages** and create documents for `About`, `Contact`, `FAQ`,
+   `Shipping and returns`, `Privacy policy`, and `Terms`. Generate a lowercase
+   slug for each document, add at least one page-builder section, complete the
+   optional page-level SEO fields, and publish. A Page hero is optional, but if
+   used it must be the first section; the storefront otherwise renders the page
+   title as its heading.
+8. Return to **Site settings** to expose those pages. Choose **Editorial page**
+   as a link destination, select the published document, and publish the
+   settings. The same reference destination is available for primary links,
+   child links, footer links, homepage/banner CTAs, and page-builder CTAs.
 
 To add a Home link, set **Label** to `Home`, choose **Internal store path**, and
 enter `/` in **Internal path**. The **External website URL** option is only for
-complete `http://` or `https://` destinations; entering `/` there intentionally
+complete `https://` destinations; entering `/` there intentionally
 shows a validation message directing the editor back to the internal option.
+Store routes such as `/collections/all` also remain **Internal store path**
+destinations; use **Editorial page** for Sanity documents rather than copying
+their slug into a path field.
 
 The Studio is embedded at `/studio` for convenient theme setup. You can also run
 the standalone Vite-powered editor with `npm run studio:dev` and open
@@ -198,14 +304,35 @@ for day-to-day schema work and TypeGen workflows.
 
 The project ID and dataset are public identifiers. Keep
 `SANITY_API_READ_TOKEN` server-only; it is only required for a private dataset.
-Published homepage, header, and footer content is projected explicitly and
-validated with Zod. The homepage carousel uses its own 60-second
+Published homepage, editorial-page, header, and footer content is projected
+explicitly and validated with Zod. Editorial pages use a five-minute fallback
+revalidation plus shared and slug-specific cache tags; published webhook
+deliveries expire the provider-wide Sanity tag immediately. The homepage
+carousel uses its own 60-second
 `sanity-home-page` cache tag, while the header and footer share the 60-second
 site-settings cache tag. Banner images use responsive URLs served directly by
 Sanity's image CDN, capped at each uploaded asset's available width; this avoids
 unnecessary upscaling and a second pass through the Next.js image optimizer.
 Until Sanity is connected and the relevant singleton is published, these
 regions use Shopify-aware and theme-safe fallback content.
+
+## SEO and discovery
+
+The root metadata uses the Sanity SEO defaults, with the Sanity site name and
+Shopify shop identity as fallbacks. Product and collection titles and
+descriptions continue to come from Shopify's native search-engine listing
+fields, and their featured images populate Open Graph and X/Twitter cards.
+Canonical URLs intentionally omit collection filters, sort choices, and cursor
+parameters so those browsing states do not compete with the collection URL.
+
+`/sitemap.xml` is generated from Shopify's Storefront sitemap resources for the
+product and collection routes this application implements. It is cached for one
+hour and includes Shopify's `updatedAt` timestamps. `/robots.txt` references the
+sitemap and excludes carts, search, account/authentication, APIs, and Studio;
+those customer-specific pages also emit `noindex` metadata. The homepage emits
+Organization and WebSite JSON-LD, product pages emit Product/Offer and
+breadcrumb data, and collection pages emit breadcrumbs. Structured-data scripts
+escape HTML-significant characters before rendering.
 
 ## Connect Klaviyo newsletter signup
 
@@ -235,6 +362,20 @@ from the account email, Klaviyo receives the subscription but the Shopify
 account remains unchanged. Store-level double opt-in can still require email
 confirmation.
 
+## Security choices
+
+This core branch intentionally does not bundle a rate-limit provider, WAF/CDN
+rules, a Content Security Policy, proxy-trust configuration, or other
+deployment-specific hardening. Integrators can choose controls that match their
+host and risk model without first removing an opinionated vendor integration.
+
+Essential application boundaries remain: secrets and customer/cart tokens stay
+server-only, external data and public inputs are validated, and webhook routes
+verify the signatures supplied by Shopify and Sanity before invalidating cache.
+Treat this as a foundation rather than a complete production security program;
+add abuse prevention, monitoring, provider scopes, secret rotation, headers,
+backups, and incident handling before launch.
+
 ## Project structure
 
 ```text
@@ -242,31 +383,34 @@ src/
   app/                       Storefront route group, embedded Studio, and global CSS
   components/account/        Customer account forms and shared account layout
   components/commerce/       Product, collection, cart, and predictive-search UI
-  components/editorial/      Sanity-driven interactive editorial UI
+  components/editorial/      Sanity page-builder and interactive editorial UI
   components/layout/         Responsive global header, footer, and mobile drawer
   components/ui/             shadcn/ui component source
   components/storefront/     Reusable storefront and Motion presentation
   lib/sanity/                Sanity env, GROQ, caching, and Zod validation
   lib/klaviyo/               Server-only newsletter config and subscription service
   lib/locations/             Cached country and province/state validation
+  lib/webhooks/              Shared bounded webhook request handling
   lib/shopify/client.ts      Storefront GraphQL transport and response validation
   lib/shopify/graphql/       Fragments, queries, and generated operation artifacts
   lib/shopify/schemas/       Runtime Zod schemas and inferred TypeScript types
   lib/shopify/services/      Reusable Shopify data-access functions
+  lib/validation/            Shared input and external-response boundaries
 studio/
-  src/schemaTypes/           Homepage, site settings, navigation, and footer schemas
+  src/schemaTypes/           Page builder, homepage, settings, navigation, and footer schemas
   sanity.config.ts           Standalone Studio and singleton configuration
 ```
 
 The homepage waits for an incoming request before reading environment variables,
 which makes the same deployment build usable with different runtime store
 configuration. The Shopify homepage catalog is cached for five minutes, while
-the public Sanity banner is cached independently for 60 seconds. Collection
+the public Sanity banner is cached independently for 60 seconds and editorial
+pages use a five-minute tagged cache with an hourly sitemap read. Collection
 browse responses use Next.js's persistent fetch cache with 60-second
-revalidation, query-variable-aware cache keys, a global collection tag, and a
-handle-specific tag. Cart and customer requests always use `no-store` and are
-never placed in the shared cache. Klaviyo subscription mutations are also
-uncached.
+revalidation, filter-, sort-, and cursor-aware cache keys, a global collection
+tag, and a handle-specific tag. Cart and customer requests always use `no-store`
+and are never placed in the shared cache. Klaviyo subscription mutations are
+also uncached.
 
 ## Commands
 
@@ -274,6 +418,7 @@ uncached.
 npm run dev        # start the Turbopack development server
 npm run lint       # run ESLint
 npm run typecheck  # run TypeScript without emitting files
+npm run test       # run security and application regression tests
 npm run graphql:codegen # validate operations against Shopify and regenerate artifacts
 npm run build      # create a production build
 npm run start      # serve the production build

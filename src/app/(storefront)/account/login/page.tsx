@@ -9,6 +9,7 @@ import { hasCustomerSession } from "@/lib/shopify/services/customer-session";
 export const metadata: Metadata = {
   title: "Sign in",
   description: "Sign in to your customer account.",
+  robots: "noindex, nofollow",
 };
 
 type LoginPageProps = {

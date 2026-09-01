@@ -24,11 +24,14 @@ export const navigationItem = defineType({
       title: "label",
       internalPath: "internalPath",
       externalUrl: "externalUrl",
+      editorialPageTitle: "editorialPage.title",
       children: "children",
     },
-    prepare({ title, internalPath, externalUrl, children }) {
+    prepare({ title, internalPath, externalUrl, editorialPageTitle, children }) {
       const childCount = Array.isArray(children) ? children.length : 0;
-      const destination = internalPath || externalUrl || "Missing destination";
+      const destination = editorialPageTitle
+        ? `Page: ${editorialPageTitle}`
+        : internalPath || externalUrl || "Missing destination";
 
       return {
         title: title || "Untitled navigation item",

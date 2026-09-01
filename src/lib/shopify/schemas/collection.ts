@@ -72,6 +72,10 @@ export const collectionCardSchema = z.object({
   handle: collectionHandleSchema,
   title: z.string(),
   description: z.string(),
+  seo: z.object({
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+  }),
   image: productImageSchema.nullable(),
 });
 
@@ -92,6 +96,12 @@ export const shopifyProductFilterSchema = z.object({
 const collectionProductsSchema = z.object({
   nodes: z.array(storefrontProductSchema),
   filters: z.array(shopifyProductFilterSchema),
+  pageInfo: z.object({
+    hasNextPage: z.boolean(),
+    hasPreviousPage: z.boolean(),
+    startCursor: z.string().nullable(),
+    endCursor: z.string().nullable(),
+  }),
 });
 
 const collectionFilterOptionsSchema = z.object({
@@ -126,8 +136,12 @@ const rawBrowseParamsSchema = z
   .object({
     sort: z.union([z.string(), z.array(z.string())]).optional(),
     filter: z.union([z.string(), z.array(z.string())]).optional(),
+    after: z.union([z.string(), z.array(z.string())]).optional(),
+    before: z.union([z.string(), z.array(z.string())]).optional(),
   })
   .loose();
+
+const collectionCursorSchema = z.string().trim().min(1).max(2048);
 
 function firstValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -183,12 +197,22 @@ export function parseCollectionBrowseParams(input: unknown) {
   const selectedPriceRange = uniqueFilters
     .map(getProductFilterPriceRange)
     .find((priceRange) => priceRange !== null) ?? null;
+  const parsedAfter = collectionCursorSchema.safeParse(
+    firstValue(params.after),
+  );
+  const parsedBefore = collectionCursorSchema.safeParse(
+    firstValue(params.before),
+  );
+  const hasAmbiguousCursor = parsedAfter.success && parsedBefore.success;
 
   return {
     sort: parsedSort.success ? parsedSort.data : "featured",
     filters: uniqueFilters,
     serializedFilters: uniqueFilters.map(serializeProductFilter),
     selectedPriceRange,
+    after: parsedAfter.success && !hasAmbiguousCursor ? parsedAfter.data : null,
+    before:
+      parsedBefore.success && !hasAmbiguousCursor ? parsedBefore.data : null,
   } as const;
 }
 
@@ -196,6 +220,9 @@ export type CollectionCardData = z.infer<typeof collectionCardSchema>;
 export type CollectionSortValue = z.infer<typeof collectionSortValueSchema>;
 export type ProductFilterInput = z.infer<typeof productFilterInputSchema>;
 export type ProductFilterPriceRange = z.infer<typeof priceRangeSchema>;
+export type ProductPageInfo = z.infer<
+  typeof collectionProductsSchema
+>["pageInfo"];
 export type ShopifyProductFilter = z.infer<
   typeof shopifyProductFilterSchema
 >;
