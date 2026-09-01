@@ -4,6 +4,10 @@ export const COLLECTION_CARD_FRAGMENT = `#graphql
     handle
     title
     description
+    seo {
+      title
+      description
+    }
     image {
       id
       url
@@ -25,5 +29,14 @@ export const PRODUCT_FILTER_FRAGMENT = `#graphql
       count
       input
     }
+  }
+`;
+
+export const PRODUCT_PAGE_INFO_FRAGMENT = `#graphql
+  fragment ProductPageInfoFields on PageInfo {
+    hasNextPage
+    hasPreviousPage
+    startCursor
+    endCursor
   }
 `;

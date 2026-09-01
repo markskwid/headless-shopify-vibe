@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { httpsUrlSchema } from "@/lib/validation/url";
+
 import { collectionCardSchema } from "./collection";
 import { storefrontProductSchema } from "./product";
 
@@ -8,7 +10,7 @@ export const storefrontHomeSchema = z.object({
     name: z.string(),
     description: z.string().nullable(),
     primaryDomain: z.object({
-      url: z.url(),
+      url: httpsUrlSchema,
     }),
   }),
   products: z.object({
@@ -22,6 +24,7 @@ export const storefrontHomeSchema = z.object({
 export const storefrontIdentitySchema = z.object({
   shop: z.object({
     name: z.string(),
+    description: z.string().nullable(),
   }),
 });
 

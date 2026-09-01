@@ -36,6 +36,13 @@ export const siteSettings = defineType({
       ],
     }),
     defineField({
+      name: "seo",
+      title: "SEO and social sharing",
+      type: "seoSettings",
+      description:
+        "Global search and sharing defaults. Shopify remains the source of product and collection SEO fields.",
+    }),
+    defineField({
       name: "navigation",
       title: "Primary navigation",
       type: "array",
@@ -53,7 +60,7 @@ export const siteSettings = defineType({
     prepare({ title, media }) {
       return {
         title: title || "Site settings",
-        subtitle: "Header and footer content",
+        subtitle: "Header, footer, and SEO defaults",
         media,
       };
     },

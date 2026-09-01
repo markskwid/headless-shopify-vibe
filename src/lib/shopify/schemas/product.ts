@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { httpsUrlSchema } from "@/lib/validation/url";
+
 export const moneySchema = z.object({
   amount: z.string(),
   currencyCode: z.string().length(3),
@@ -13,7 +15,7 @@ export const storefrontProductSchema = z.object({
   trackingParameters: z.string().max(2048).nullable().optional(),
   featuredImage: z
     .object({
-      url: z.url(),
+      url: httpsUrlSchema,
       altText: z.string().nullable(),
       width: z.number().int().positive().nullable(),
       height: z.number().int().positive().nullable(),
@@ -26,7 +28,7 @@ export const storefrontProductSchema = z.object({
 
 export const productImageSchema = z.object({
   id: z.string(),
-  url: z.url(),
+  url: httpsUrlSchema,
   altText: z.string().nullable(),
   width: z.number().int().positive().nullable(),
   height: z.number().int().positive().nullable(),
@@ -36,6 +38,7 @@ export const productVariantSchema = z.object({
   id: z.string(),
   title: z.string(),
   availableForSale: z.boolean(),
+  sku: z.string().nullable(),
   selectedOptions: z.array(
     z.object({
       name: z.string(),
@@ -50,6 +53,11 @@ export const productVariantSchema = z.object({
 export const productDetailsSchema = storefrontProductSchema.extend({
   description: z.string(),
   vendor: z.string(),
+  productType: z.string(),
+  seo: z.object({
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+  }),
   images: z.object({
     nodes: z.array(productImageSchema),
   }),

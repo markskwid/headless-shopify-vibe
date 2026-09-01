@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { UserRound } from "lucide-react";
 
 import { logoutCustomerAction } from "@/app/(storefront)/account/actions";
@@ -7,19 +6,17 @@ import { AccountDashboard } from "@/components/account/account-dashboard";
 import { buttonVariants } from "@/components/ui/button";
 import { getCustomer } from "@/lib/shopify/services/customer";
 import { getCustomerAccessTokenFromCookies } from "@/lib/shopify/services/customer-session";
-import { parseBuyerIp } from "@/lib/shopify/utils/buyer-ip";
+import { getRequestSecurityContext } from "@/lib/security/request";
 
 export const metadata: Metadata = {
   title: "My account",
   description: "View your Shopify customer account details.",
+  robots: "noindex, nofollow",
 };
 
 export default async function AccountPage() {
   const token = await getCustomerAccessTokenFromCookies();
-  const requestHeaders = await headers();
-  const buyerIp = parseBuyerIp(
-    requestHeaders.get("x-real-ip") ?? requestHeaders.get("x-forwarded-for"),
-  );
+  const { buyerIp } = await getRequestSecurityContext();
   const customer = token ? await getCustomer(token, buyerIp) : null;
 
   if (!customer) {

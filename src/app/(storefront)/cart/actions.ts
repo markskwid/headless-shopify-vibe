@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { z } from "zod";
 
 import {
@@ -22,7 +21,8 @@ import {
 } from "@/lib/shopify/services/cart-session";
 import type { Cart, CartSnapshot } from "@/lib/shopify/schemas/cart";
 import { getCustomerAccessTokenFromCookies } from "@/lib/shopify/services/customer-session";
-import { parseBuyerIp } from "@/lib/shopify/utils/buyer-ip";
+import { checkRateLimits } from "@/lib/security/rate-limit";
+import { getRequestSecurityContext } from "@/lib/security/request";
 
 const merchandiseIdSchema = z
   .string()
@@ -63,6 +63,26 @@ function failure(error: unknown): CartActionResult {
   };
 }
 
+function rateLimitFailure(): CartActionResult {
+  return {
+    cart: null,
+    error: "Too many cart updates. Wait a moment and try again.",
+    warning: null,
+  };
+}
+
+async function checkCartRateLimit(cartId?: string | null) {
+  const context = await getRequestSecurityContext();
+  const result = await checkRateLimits([
+    { policy: "cart-write", identifier: context.clientKey },
+    ...(cartId
+      ? [{ policy: "cart-write" as const, identifier: `cart:${cartId}` }]
+      : []),
+  ]);
+
+  return { context, allowed: result.allowed };
+}
+
 async function requireCurrentCart() {
   const cartId = await getCartIdFromCookies();
   if (!cartId) throw new ShopifyCartError("Your cart is empty.");
@@ -82,12 +102,12 @@ export async function addCartLineAction(input: unknown) {
       })
       .parse(input);
     const cartId = await getCartIdFromCookies();
+    const rateLimit = await checkCartRateLimit(cartId);
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const currentCart = cartId ? await getCart(cartId) : null;
     const customerAccessToken = await getCustomerAccessTokenFromCookies();
-    const requestHeaders = await headers();
-    const buyerIp = parseBuyerIp(
-      requestHeaders.get("x-real-ip") ?? requestHeaders.get("x-forwarded-for"),
-    );
+    const buyerIp = rateLimit.context.buyerIp;
 
     if (currentCart && customerAccessToken) {
       await updateCartBuyerIdentity(cartId, customerAccessToken, buyerIp);
@@ -110,6 +130,9 @@ export async function updateCartLineAction(input: unknown) {
     const parsed = z
       .object({ lineId: lineIdSchema, quantity: quantitySchema })
       .parse(input);
+    const rateLimit = await checkCartRateLimit(await getCartIdFromCookies());
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const cart = await requireCurrentCart();
     const result = await updateCartLine(cart.id, parsed);
     return success(result.cart, result.warnings);
@@ -121,6 +144,9 @@ export async function updateCartLineAction(input: unknown) {
 export async function removeCartLineAction(input: unknown) {
   try {
     const lineId = lineIdSchema.parse(input);
+    const rateLimit = await checkCartRateLimit(await getCartIdFromCookies());
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const cart = await requireCurrentCart();
     const result = await removeCartLine(cart.id, lineId);
     return success(result.cart, result.warnings);
@@ -132,6 +158,9 @@ export async function removeCartLineAction(input: unknown) {
 export async function updateCartNoteAction(input: unknown) {
   try {
     const note = noteSchema.parse(input);
+    const rateLimit = await checkCartRateLimit(await getCartIdFromCookies());
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const cart = await requireCurrentCart();
     const result = await updateCartNote(cart.id, note);
     return success(result.cart, result.warnings);
@@ -143,6 +172,9 @@ export async function updateCartNoteAction(input: unknown) {
 export async function updateCartDiscountAction(input: unknown) {
   try {
     const code = discountCodeSchema.parse(input);
+    const rateLimit = await checkCartRateLimit(await getCartIdFromCookies());
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const cart = await requireCurrentCart();
     const result = await updateCartDiscountCodes(cart.id, [code]);
     const appliedCode = result.cart.discountCodes.find(
@@ -163,6 +195,9 @@ export async function updateCartDiscountAction(input: unknown) {
 
 export async function removeCartDiscountAction() {
   try {
+    const rateLimit = await checkCartRateLimit(await getCartIdFromCookies());
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const cart = await requireCurrentCart();
     const result = await updateCartDiscountCodes(cart.id, []);
     return success(result.cart, result.warnings);

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
+import { getSiteSeo, rootMetadata } from "@/lib/seo/metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,13 +14,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Headless Vibe",
-    template: "%s | Headless Vibe",
-  },
-  description: "A reusable Next.js starter for Shopify headless storefronts.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return rootMetadata(await getSiteSeo());
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

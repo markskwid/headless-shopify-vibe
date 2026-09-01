@@ -28,7 +28,7 @@ export const socialLink = defineType({
       title: "Profile URL",
       type: "url",
       validation: (rule) =>
-        rule.required().uri({ scheme: ["http", "https"] }),
+        rule.required().uri({ scheme: ["https"] }),
     }),
   ],
   preview: {

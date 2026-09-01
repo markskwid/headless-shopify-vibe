@@ -3,6 +3,108 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-01 - Storefront SEO and Next development indicator fix
+
+- Added a validated `STOREFRONT_BASE_URL` setting for the public headless origin
+  used by canonical metadata, structured data, `robots.txt`, and `sitemap.xml`.
+  Existing deployments should set it to their customer-facing HTTPS domain;
+  Vercel production URLs and localhost remain development/platform fallbacks.
+- Added Sanity-editable global SEO defaults for the homepage title, description,
+  and social sharing image. The existing Site settings singleton now owns these
+  optional overrides, with Shopify shop identity and safe starter copy as
+  fallbacks. No existing Sanity content migration is required.
+- Added canonical URLs plus Open Graph and X/Twitter cards to the homepage,
+  products, and collections. Product and collection pages use Shopify's native
+  SEO fields before their normal title/description, while featured images are
+  validated and reused for social previews. Collection canonicals intentionally
+  omit sorting, filtering, and cursor parameters.
+- Added nonce-bearing, HTML-safe JSON-LD for the storefront Organization and
+  WebSite, product Offer availability/pricing, and product/collection
+  breadcrumbs. Account, authentication, cart, and search pages remain excluded
+  from indexing.
+- Added generated `robots.txt` and an hourly cached sitemap containing the home
+  and all-products routes plus Shopify Storefront sitemap resources for every
+  implemented product and collection page. Empty Shopify sitemap pages are
+  handled using `hasNextPage`, responses are Zod-validated, and user-specific
+  data is never cached into the sitemap.
+- Expanded the Shopify product, collection, variant, and shop operations and
+  matching Zod schemas with SEO, product type, SKU, and description data.
+  Regenerated and validated all 29 Storefront operations against API version
+  2026-07; no Storefront API version or dependency changed.
+- Fixed the malformed Next.js development indicator by allowing its
+  runtime-injected inline styles only in development. Production retains the
+  strict nonce-only `style-src` policy, so this compatibility adjustment does
+  not weaken the deployed storefront CSP.
+- Documented SEO ownership, sitemap caching, structured data, canonical URL
+  behavior, Sanity authoring, the required public URL, and the development-only
+  CSP exception in README.
+
+## 2026-09-01 - Storefront security hardening
+
+- Added layered abuse protection to login, registration, password recovery,
+  authenticated account writes, cart mutations, newsletter signup, predictive
+  search, and location lookups. Authentication uses independent per-IP and
+  HMAC-pseudonymized per-account sliding-window buckets to cover both targeted
+  and credential-stuffing patterns; cart and account writes also use independent
+  resource/session buckets.
+- Added `@upstash/ratelimit` 2.0.8 and `@upstash/redis` 1.38.3 for shared
+  production limits, plus a bounded in-process fallback that remains active in
+  local development or during a transient Redis failure. Added server-only
+  `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`,
+  `RATE_LIMIT_KEY_SALT`, and trusted-proxy configuration placeholders. Existing
+  deployments must add the three Upstash/salt values for multi-instance limits.
+- Centralized buyer-IP extraction behind one explicitly selected proxy header.
+  Shopify buyer traffic, account pages, footer personalization, and abuse
+  limits now use the same validated IP boundary rather than trusting an
+  arbitrary first matching forwarding header.
+- Added a nonce-based storefront Content Security Policy and global HSTS
+  (production), same-origin framing, MIME-sniffing, referrer, browser-feature,
+  opener, resource, and legacy cross-domain policy headers. Disabled the
+  framework branding header and limited Server Action bodies to 64 KB while
+  preserving Next.js's built-in same-origin CSRF check and optional trusted
+  reverse-proxy origins.
+- Hardened production cart and customer cookies with `__Host-` names and high
+  priority while retaining read/clear compatibility for legacy cookie names.
+  Existing sessions remain readable and migrate on their next cookie write; no
+  manual data migration is required.
+- Restricted Shopify response, Sanity image/social, checkout, order-status, and
+  editorial external URLs to HTTPS. Internal CMS links now reject
+  protocol-relative and control-character destinations, and Studio validation
+  guides editors to secure external URLs.
+- Added finite Shopify, Sanity, and Klaviyo request timeouts, generic predictive
+  search validation responses, no-store search responses, and generic
+  authentication errors that reduce account enumeration and validation-detail
+  disclosure.
+- Added Node regression tests for allowed HTTPS/internal editorial links,
+  rejected insecure/executable/protocol-relative links, HTTPS-only external
+  response URLs, and strict trusted-header IPv4/IPv6 parsing.
+- Added `SECURITY.md` with private reporting guidance and a production security
+  checklist, and documented rate limiting, proxy trust, Server Action origins,
+  CSP scope, cookie migration, and residual CDN/provider responsibilities in
+  README. The final full `npm audit` reported zero known advisories across all
+  1,537 dependencies. No Shopify GraphQL operation, generated artifact, or
+  Storefront API version changed.
+
+## 2026-08-28 - Collection cursor pagination
+
+- Added Shopify cursor pagination to every collection route, including
+  `/collections/all`, with 24 products per page and responsive Previous/Next
+  controls. Pagination URLs retain the selected sort value and every validated
+  Shopify Search & Discovery filter, including price range filters.
+- Added strict `after` and `before` query-parameter parsing with length limits
+  and ambiguous-cursor rejection. Applying filters or changing the automatic
+  sort intentionally removes the cursor and returns the customer to the first
+  page of the new result set.
+- Expanded the `Collection` and `AllProducts` Storefront API queries with
+  nullable forward/backward cursor variables and a reusable `PageInfo`
+  fragment. Added matching Zod response validation, directional `first`/`last`
+  service variables, cursor-aware cached request bodies, and safe empty-state
+  pagination metadata.
+- Validated and regenerated all 28 Shopify Storefront operations against API
+  version 2026-07. Updated README browsing and caching documentation and
+  corrected its stale add-to-cart description. No dependency, environment
+  variable, content migration, or API-version change was required.
+
 ## 2026-08-28 - Sanity homepage banner carousel and image delivery fix
 
 - Replaced the single homepage banner editor with a reorderable Sanity array of

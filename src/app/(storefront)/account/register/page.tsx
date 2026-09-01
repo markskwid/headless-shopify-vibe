@@ -8,6 +8,7 @@ import { hasCustomerSession } from "@/lib/shopify/services/customer-session";
 export const metadata: Metadata = {
   title: "Create account",
   description: "Create a customer account for this store.",
+  robots: "noindex, nofollow",
 };
 
 export default async function RegisterPage() {

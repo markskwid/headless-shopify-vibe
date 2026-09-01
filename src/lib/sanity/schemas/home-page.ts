@@ -1,12 +1,6 @@
 import { z } from "zod";
 
-const homepageHrefSchema = z.string().trim().min(1).refine(
-  (value) =>
-    value.startsWith("/") ||
-    value.startsWith("#") ||
-    /^https?:\/\//i.test(value),
-  "Homepage CTA destinations must be an internal path, anchor, or HTTP(S) URL.",
-);
+import { safeLinkDestinationSchema } from "@/lib/validation/url";
 
 const cropSchema = z.object({
   top: z.number().min(0).max(1),
@@ -48,7 +42,7 @@ export const homePageSettingsSchema = z
           cta: z
             .object({
               label: z.string().trim().min(1).max(40),
-              href: homepageHrefSchema,
+              href: safeLinkDestinationSchema,
               openInNewTab: z.boolean(),
             })
             .nullable(),

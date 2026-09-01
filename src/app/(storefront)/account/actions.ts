@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -33,11 +32,12 @@ import {
   customerLoginInputSchema,
   customerRegistrationInputSchema,
 } from "@/lib/shopify/schemas/customer";
-import { parseBuyerIp } from "@/lib/shopify/utils/buyer-ip";
 import {
   LocationInputError,
   normalizeAddressLocation,
 } from "@/lib/locations/services";
+import { checkRateLimits } from "@/lib/security/rate-limit";
+import { getRequestSecurityContext } from "@/lib/security/request";
 
 export type AccountActionState = {
   message: string | null;
@@ -64,13 +64,6 @@ function actionFailure(
   };
 }
 
-async function getBuyerIp() {
-  const requestHeaders = await headers();
-  return parseBuyerIp(
-    requestHeaders.get("x-real-ip") ?? requestHeaders.get("x-forwarded-for"),
-  );
-}
-
 async function synchronizeCartCustomer(
   customerAccessToken: string | null,
   buyerIp?: string,
@@ -84,6 +77,40 @@ async function synchronizeCartCustomer(
   } catch {
     // A stale or temporarily unavailable cart must not block account access.
   }
+}
+
+function rateLimitFailure(): AccountActionState {
+  return {
+    message: "Too many requests. Wait a while and try again.",
+    fieldErrors: {},
+    success: false,
+  };
+}
+
+async function checkAuthenticationRateLimit(
+  kind: "login" | "recover" | "register",
+  email: string,
+) {
+  const context = await getRequestSecurityContext();
+  const result = await checkRateLimits([
+    { policy: `auth-${kind}-ip`, identifier: context.clientKey },
+    { policy: `auth-${kind}-account`, identifier: email },
+  ]);
+
+  return { context, allowed: result.allowed };
+}
+
+async function checkAccountWriteRateLimit(customerAccessToken: string) {
+  const context = await getRequestSecurityContext();
+  const result = await checkRateLimits([
+    { policy: "account-write", identifier: context.clientKey },
+    {
+      policy: "account-write",
+      identifier: `customer:${customerAccessToken}`,
+    },
+  ]);
+
+  return { context, allowed: result.allowed };
 }
 
 export async function loginCustomerAction(
@@ -100,12 +127,24 @@ export async function loginCustomerAction(
   let token;
 
   try {
-    const buyerIp = await getBuyerIp();
-    token = await loginCustomer(parsed.data, buyerIp);
+    const rateLimit = await checkAuthenticationRateLimit(
+      "login",
+      parsed.data.email,
+    );
+    if (!rateLimit.allowed) return rateLimitFailure();
+
+    token = await loginCustomer(parsed.data, rateLimit.context.buyerIp);
     await setCustomerSessionCookie(token, formData.get("remember") === "on");
-    await synchronizeCartCustomer(token.accessToken, buyerIp);
+    await synchronizeCartCustomer(token.accessToken, rateLimit.context.buyerIp);
   } catch (error) {
-    return actionFailure(error, "Sign in is temporarily unavailable.");
+    return {
+      message:
+        error instanceof ShopifyCustomerError
+          ? "The email or password is incorrect."
+          : "Sign in is temporarily unavailable.",
+      fieldErrors: {},
+      success: false,
+    };
   }
 
   redirect("/account");
@@ -141,14 +180,24 @@ export async function registerCustomerAction(
   if (!parsed.success) return validationFailure(parsed.error);
 
   try {
+    const rateLimit = await checkAuthenticationRateLimit(
+      "register",
+      parsed.data.email,
+    );
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const { confirmPassword: _confirmPassword, ...customer } = parsed.data;
     void _confirmPassword;
-    await registerCustomer(customer, await getBuyerIp());
+    await registerCustomer(customer, rateLimit.context.buyerIp);
   } catch (error) {
-    return actionFailure(
-      error,
-      "The account could not be created. Please try again.",
-    );
+    return {
+      message:
+        error instanceof ShopifyCustomerError
+          ? "The account could not be created with those details."
+          : "Account creation is temporarily unavailable. Please try again.",
+      fieldErrors: {},
+      success: false,
+    };
   }
 
   redirect("/account/login?registered=1");
@@ -163,7 +212,13 @@ export async function recoverCustomerAction(
   if (!parsed.success) return validationFailure(parsed.error);
 
   try {
-    await recoverCustomer(parsed.data, await getBuyerIp());
+    const rateLimit = await checkAuthenticationRateLimit(
+      "recover",
+      parsed.data,
+    );
+    if (!rateLimit.allowed) return rateLimitFailure();
+
+    await recoverCustomer(parsed.data, rateLimit.context.buyerIp);
   } catch (error) {
     if (!(error instanceof ShopifyCustomerError)) {
       return actionFailure(
@@ -183,7 +238,7 @@ export async function recoverCustomerAction(
 
 export async function logoutCustomerAction() {
   const token = await getCustomerAccessTokenFromCookies();
-  const buyerIp = await getBuyerIp();
+  const { buyerIp } = await getRequestSecurityContext();
 
   await synchronizeCartCustomer(null, buyerIp);
 
@@ -259,9 +314,17 @@ export async function updateCustomerDetailsAction(
   }
 
   try {
+    const rateLimit = await checkAccountWriteRateLimit(token);
+    if (!rateLimit.allowed) {
+      return {
+        ...rateLimitFailure(),
+        revision: previousState.revision,
+      };
+    }
+
     const { confirmPassword: _confirmPassword, ...customerInput } = parsed.data;
     void _confirmPassword;
-    const buyerIp = await getBuyerIp();
+    const buyerIp = rateLimit.context.buyerIp;
     const result = await updateCustomerDetails(token, customerInput, buyerIp);
 
     if (customerInput.password) {
@@ -374,8 +437,11 @@ export async function addCustomerAddressAction(
   }
 
   try {
+    const rateLimit = await checkAccountWriteRateLimit(token);
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const { setDefault, address } = await normalizeAddressInput(parsed.data);
-    const buyerIp = await getBuyerIp();
+    const buyerIp = rateLimit.context.buyerIp;
     const createdAddress = await createCustomerAddress(token, address, buyerIp);
 
     if (setDefault) {
@@ -431,9 +497,12 @@ export async function updateCustomerAddressAction(
   }
 
   try {
+    const rateLimit = await checkAccountWriteRateLimit(token);
+    if (!rateLimit.allowed) return rateLimitFailure();
+
     const { addressId, ...addressFields } = parsed.data;
     const { setDefault, address } = await normalizeAddressInput(addressFields);
-    const buyerIp = await getBuyerIp();
+    const buyerIp = rateLimit.context.buyerIp;
     await updateCustomerAddress(token, addressId, address, buyerIp);
 
     if (setDefault) {
@@ -488,7 +557,14 @@ export async function setPrimaryCustomerAddressAction(
   }
 
   try {
-    await setDefaultCustomerAddress(token, addressId.data, await getBuyerIp());
+    const rateLimit = await checkAccountWriteRateLimit(token);
+    if (!rateLimit.allowed) return rateLimitFailure();
+
+    await setDefaultCustomerAddress(
+      token,
+      addressId.data,
+      rateLimit.context.buyerIp,
+    );
     revalidatePath("/account");
     return {
       message: "Primary shipping address updated.",
@@ -524,7 +600,14 @@ export async function deleteCustomerAddressAction(
   }
 
   try {
-    await deleteCustomerAddress(token, addressId.data, await getBuyerIp());
+    const rateLimit = await checkAccountWriteRateLimit(token);
+    if (!rateLimit.allowed) return rateLimitFailure();
+
+    await deleteCustomerAddress(
+      token,
+      addressId.data,
+      rateLimit.context.buyerIp,
+    );
     revalidatePath("/account");
     return {
       message: "Address deleted.",

@@ -1,22 +1,19 @@
 import { z } from "zod";
 
-const navigationHrefSchema = z.string().min(1).refine(
-  (value) =>
-    value.startsWith("/") ||
-    value.startsWith("#") ||
-    /^https?:\/\//i.test(value),
-  "Navigation destinations must be an internal path, anchor, or HTTP(S) URL.",
-);
+import {
+  httpsUrlSchema,
+  safeLinkDestinationSchema,
+} from "@/lib/validation/url";
 
 const navigationLinkSchema = z.object({
   _key: z.string().min(1),
   label: z.string().min(1),
-  href: navigationHrefSchema,
+  href: safeLinkDestinationSchema,
   openInNewTab: z.boolean(),
 });
 
 const sanityImageSchema = z.object({
-  url: z.url(),
+  url: httpsUrlSchema,
   alt: z.string().min(1),
   width: z.number().positive(),
   height: z.number().positive(),
@@ -58,7 +55,7 @@ export const footerSettingsSchema = z
           z.object({
             _key: z.string().min(1),
             platform: socialPlatformSchema,
-            url: z.url(),
+            url: httpsUrlSchema,
           }),
         ),
         columns: z.array(
@@ -85,3 +82,20 @@ export const footerSettingsSchema = z
 export type FooterSettings = NonNullable<z.infer<typeof footerSettingsSchema>>;
 export type FooterLinkColumn = NonNullable<FooterSettings["footer"]>["columns"][number];
 export type FooterSocialLink = NonNullable<FooterSettings["footer"]>["socialLinks"][number];
+
+export const seoSettingsSchema = z
+  .object({
+    siteName: z.string().min(1).max(60).nullable(),
+    logo: sanityImageSchema.nullable(),
+    seo: z
+      .object({
+        title: z.string().min(1).max(60).nullable(),
+        description: z.string().min(1).max(160).nullable(),
+        socialImage: sanityImageSchema.nullable(),
+      })
+      .nullable(),
+    socialProfiles: z.array(httpsUrlSchema),
+  })
+  .nullable();
+
+export type SeoSettings = NonNullable<z.infer<typeof seoSettingsSchema>>;

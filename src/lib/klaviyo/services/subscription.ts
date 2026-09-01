@@ -12,6 +12,7 @@ import {
 const KLAVIYO_SUBSCRIPTIONS_ENDPOINT =
   "https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs";
 const KLAVIYO_API_REVISION = "2026-07-15";
+const KLAVIYO_REQUEST_TIMEOUT_MS = 10_000;
 
 export class KlaviyoSubscriptionError extends Error {
   constructor(message: string) {
@@ -87,6 +88,7 @@ export async function subscribeToNewsletter(emailInput: unknown) {
         },
       }),
       cache: "no-store",
+      signal: AbortSignal.timeout(KLAVIYO_REQUEST_TIMEOUT_MS),
     });
   } catch {
     throw new KlaviyoSubscriptionError(

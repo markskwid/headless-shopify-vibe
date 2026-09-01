@@ -6,6 +6,11 @@ export const PRODUCT_BY_HANDLE_QUERY = `#graphql
       ...ProductCardFields
       description
       vendor
+      productType
+      seo {
+        title
+        description
+      }
       images(first: 250) {
         nodes {
           id
@@ -27,6 +32,7 @@ export const PRODUCT_BY_HANDLE_QUERY = `#graphql
           id
           title
           availableForSale
+          sku
           selectedOptions {
             name
             value

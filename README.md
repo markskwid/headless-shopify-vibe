@@ -12,8 +12,9 @@ The Sanity-editable global header includes Shopify-powered predictive product se
 300 ms after typing, previews up to six products, handles empty and failed
 searches, and links to a complete `/search` results page. Search result products
 open theme-native `/products/[handle]` pages with a draggable Embla image gallery,
-thumbnails, variant-driven image and price updates, a presentational add-to-cart
-control, and an Embla carousel of Shopify-generated related products.
+thumbnails, variant-driven image and price updates, a Shopify Cart API-backed
+add-to-cart control, and an Embla carousel of Shopify-generated related
+products.
 
 The homepage can use a Sanity-managed carousel containing up to five reorderable
 banners. Every banner has an image, title, description, enable toggle, and
@@ -24,7 +25,9 @@ homepage also presents the six most recently updated Shopify collections with
 their title, description, featured image, and a built-in fallback image. Every
 collection route, including `/collections/all`, supports Shopify-native Search
 & Discovery filters, a currency-aware price-range slider, and automatic
-URL-based sorting for shareable browse states.
+URL-based sorting for shareable browse states. Cursor-based Previous and Next
+pagination loads 24 products at a time while retaining the active sort and all
+selected filters in the URL.
 
 Missing routes and unavailable Shopify products or collections render a branded
 404 page with the normal storefront shell and recovery links. Unmatched routes
@@ -63,8 +66,9 @@ into Shopify email marketing. The private API key never reaches the browser.
 - npm
 - A Shopify store with products published to the Headless sales channel
 - Legacy customer accounts for the included email/password account experience
-- A Sanity project for editable homepage, header, and footer content
+- A Sanity project for editable homepage, header, footer, and SEO defaults
 - A Klaviyo list and scoped private API key for newsletter subscriptions
+- An Upstash Redis database for shared production rate limits
 
 ## Quick start
 
@@ -93,13 +97,18 @@ If Windows PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`.
 4. Set the permanent `your-store.myshopify.com` domain.
 5. Add either a private or public Storefront API access token. A private token is
    preferred because all API calls in this starter run on the server.
-6. Restart `npm run dev` after changing environment variables.
+6. Set `STOREFRONT_BASE_URL` to the public headless storefront URL. This is the
+   canonical origin used in metadata, structured data, `robots.txt`, and
+   `sitemap.xml`; do not use the `myshopify.com` domain unless it is genuinely
+   the customer-facing headless URL.
+7. Restart `npm run dev` after changing environment variables.
 
 ```dotenv
 SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
 SHOPIFY_STOREFRONT_PRIVATE_ACCESS_TOKEN=your_private_token
 SHOPIFY_STOREFRONT_PUBLIC_ACCESS_TOKEN=
 SHOPIFY_STOREFRONT_API_VERSION=2026-07
+STOREFRONT_BASE_URL=https://www.example.com
 ```
 
 Basic product and collection queries can use Shopify's tokenless Storefront API,
@@ -182,13 +191,15 @@ with one level of child links, and the complete footer.
    should appear. Drag items to reorder them and publish the document. The
    existing Shopify introduction remains visible until at least one complete,
    enabled banner is published.
-6. Open the **Site settings** singleton, edit the header and footer, and publish
-   it. Footer link columns are single-level; social-platform icons are selected
+6. Open the **Site settings** singleton, edit the header, footer, and **SEO and
+   social sharing** defaults, then publish it. The SEO block accepts the default
+   homepage title, description, and a recommended 1200 × 630 sharing image.
+   Footer link columns are single-level; social-platform icons are selected
    automatically from each configured platform.
 
 To add a Home link, set **Label** to `Home`, choose **Internal store path**, and
 enter `/` in **Internal path**. The **External website URL** option is only for
-complete `http://` or `https://` destinations; entering `/` there intentionally
+complete `https://` destinations; entering `/` there intentionally
 shows a validation message directing the editor back to the internal option.
 
 The Studio is embedded at `/studio` for convenient theme setup. You can also run
@@ -206,6 +217,29 @@ Sanity's image CDN, capped at each uploaded asset's available width; this avoids
 unnecessary upscaling and a second pass through the Next.js image optimizer.
 Until Sanity is connected and the relevant singleton is published, these
 regions use Shopify-aware and theme-safe fallback content.
+
+## SEO and discovery
+
+The root metadata uses the Sanity SEO defaults, with the Sanity site name and
+Shopify shop identity as fallbacks. Product and collection titles and
+descriptions continue to come from Shopify's native search-engine listing
+fields, and their featured images populate Open Graph and X/Twitter cards.
+Canonical URLs intentionally omit collection filters, sort choices, and cursor
+parameters so those browsing states do not compete with the collection URL.
+
+`/sitemap.xml` is generated from Shopify's Storefront sitemap resources for the
+product and collection routes this application implements. It is cached for one
+hour and includes Shopify's `updatedAt` timestamps. `/robots.txt` references the
+sitemap and excludes carts, search, account/authentication, APIs, and Studio;
+those customer-specific pages also emit `noindex` metadata. The homepage emits
+Organization and WebSite JSON-LD, product pages emit Product/Offer and
+breadcrumb data, and collection pages emit breadcrumbs. Structured-data scripts
+carry the request CSP nonce and escape HTML-significant characters.
+
+During `npm run dev`, the CSP permits inline styles because Next.js DevTools
+injects the development indicator styles at runtime. Production keeps the
+stricter nonce-only `style-src` policy. The development badge itself is expected
+and is never part of the production storefront.
 
 ## Connect Klaviyo newsletter signup
 
@@ -235,6 +269,60 @@ from the account email, Klaviyo receives the subscription but the Shopify
 account remains unchanged. Store-level double opt-in can still require email
 confirmation.
 
+## Security hardening and deployment
+
+The starter validates every public input and external response, keeps Shopify,
+Sanity, Klaviyo, Redis, cart, and customer credentials server-only, and applies
+separate sliding-window limits to authentication accounts and client IPs. Cart,
+account, newsletter, predictive-search, and location requests are also limited.
+Local development uses a bounded in-process fallback; production should use
+Upstash so every server instance shares the same counters.
+
+```dotenv
+UPSTASH_REDIS_REST_URL=https://your-database.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your_server_only_token
+RATE_LIMIT_KEY_SALT=at_least_32_random_characters
+TRUSTED_PROXY_IP_HEADER=x-vercel-forwarded-for
+SERVER_ACTION_ALLOWED_ORIGINS=
+```
+
+Generate a salt with Node and store it only in the deployment environment:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
+```
+
+Set `TRUSTED_PROXY_IP_HEADER` to a header that the production edge or reverse
+proxy always removes and rewrites. Use `x-vercel-forwarded-for` on Vercel or
+`cf-connecting-ip` behind Cloudflare. The default `x-forwarded-for` is suitable
+only when that header is controlled by the deployment proxy; accepting a
+client-supplied forwarding header lets attackers evade IP-based limits and
+weakens Shopify's buyer-level bot protection.
+
+Next.js already compares Server Action `Origin` and `Host` values to prevent
+cross-site invocation. Leave `SERVER_ACTION_ALLOWED_ORIGINS` blank for normal
+same-origin deployments. If a trusted reverse proxy changes that relationship,
+add only its hostnames, without protocols or paths. Server Action request bodies
+are capped at 64 KB.
+
+Storefront documents receive a nonce-based Content Security Policy plus HSTS in
+production, same-origin framing, MIME-sniffing protection, a restrictive
+permissions policy, safe referrer behavior, and no framework branding header.
+The embedded `/studio` route keeps the shared browser-security headers but is
+excluded from the storefront CSP because Sanity Studio has its own authenticated
+cross-origin runtime. Production cart and customer cookies use the `__Host-`
+prefix, `Secure`, `HttpOnly`, `SameSite=Lax`, root path, and high priority;
+legacy cookie names are accepted temporarily and replaced on the next write.
+
+External Shopify, Sanity, and Klaviyo calls have finite timeouts. All rendered
+external links and commerce URLs are restricted to HTTPS, while internal CMS
+links reject protocol-relative destinations. Run `npm audit`, lint, type checks,
+and a production build before each deployment. See [`SECURITY.md`](./SECURITY.md)
+for the reporting process and full deployment checklist. These controls are
+defense in depth; CDN/WAF rules, least-privilege provider scopes, secret rotation,
+monitoring, backups, and Shopify customer-account policy remain deployment
+responsibilities.
+
 ## Project structure
 
 ```text
@@ -249,10 +337,12 @@ src/
   lib/sanity/                Sanity env, GROQ, caching, and Zod validation
   lib/klaviyo/               Server-only newsletter config and subscription service
   lib/locations/             Cached country and province/state validation
+  lib/security/              Request identity and distributed abuse limits
   lib/shopify/client.ts      Storefront GraphQL transport and response validation
   lib/shopify/graphql/       Fragments, queries, and generated operation artifacts
   lib/shopify/schemas/       Runtime Zod schemas and inferred TypeScript types
   lib/shopify/services/      Reusable Shopify data-access functions
+  lib/validation/            Shared input and external-response boundaries
 studio/
   src/schemaTypes/           Homepage, site settings, navigation, and footer schemas
   sanity.config.ts           Standalone Studio and singleton configuration
@@ -263,10 +353,10 @@ which makes the same deployment build usable with different runtime store
 configuration. The Shopify homepage catalog is cached for five minutes, while
 the public Sanity banner is cached independently for 60 seconds. Collection
 browse responses use Next.js's persistent fetch cache with 60-second
-revalidation, query-variable-aware cache keys, a global collection tag, and a
-handle-specific tag. Cart and customer requests always use `no-store` and are
-never placed in the shared cache. Klaviyo subscription mutations are also
-uncached.
+revalidation, filter-, sort-, and cursor-aware cache keys, a global collection
+tag, and a handle-specific tag. Cart and customer requests always use `no-store`
+and are never placed in the shared cache. Klaviyo subscription mutations are
+also uncached.
 
 ## Commands
 
@@ -274,6 +364,7 @@ uncached.
 npm run dev        # start the Turbopack development server
 npm run lint       # run ESLint
 npm run typecheck  # run TypeScript without emitting files
+npm run test       # run security and application regression tests
 npm run graphql:codegen # validate operations against Shopify and regenerate artifacts
 npm run build      # create a production build
 npm run start      # serve the production build

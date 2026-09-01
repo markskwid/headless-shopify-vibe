@@ -12,6 +12,7 @@ export {
   getStorefrontIdentity,
 } from "./services/storefront";
 export { getAllProducts, getCollection } from "./services/collection";
+export { getSitemapResources } from "./services/sitemap";
 export {
   getCustomerNewsletterProfile,
   ShopifyCustomerError,
@@ -43,6 +44,7 @@ export type {
   CollectionSortValue,
   ProductFilterInput,
   ProductFilterPriceRange,
+  ProductPageInfo,
   ShopifyProductFilter,
 } from "./schemas/collection";
 export type {
@@ -51,3 +53,7 @@ export type {
   CustomerNewsletterProfile,
 } from "./schemas/customer";
 export type { StorefrontHome } from "./schemas/storefront";
+export type {
+  SitemapResource,
+  SitemapResourceType,
+} from "./schemas/sitemap";

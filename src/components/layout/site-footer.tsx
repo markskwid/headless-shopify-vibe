@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { headers } from "next/headers";
 import type { IconType } from "react-icons";
 import {
   FaFacebookF,
@@ -22,7 +21,7 @@ import {
   getCustomerNewsletterProfile,
   getStorefrontIdentity,
 } from "@/lib/shopify";
-import { parseBuyerIp } from "@/lib/shopify/utils/buyer-ip";
+import { getRequestSecurityContext } from "@/lib/security/request";
 
 const defaultColumns: FooterLinkColumn[] = [
   {
@@ -94,11 +93,7 @@ export async function SiteFooter() {
   > = Promise.resolve(null);
 
   if (customerAccessToken) {
-    const requestHeaders = await headers();
-    const buyerIp = parseBuyerIp(
-      requestHeaders.get("x-real-ip") ??
-        requestHeaders.get("x-forwarded-for"),
-    );
+    const { buyerIp } = await getRequestSecurityContext();
     customerProfilePromise = getCustomerNewsletterProfile(
       customerAccessToken,
       buyerIp,

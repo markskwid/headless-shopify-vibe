@@ -62,6 +62,7 @@ export function MobileMenu({ logo, name, navigation }: MobileMenuProps) {
   return (
     <Sheet>
       <SheetTrigger
+        nativeButton={false}
         render={
           <Button
             variant="ghost"

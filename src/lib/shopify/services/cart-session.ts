@@ -5,11 +5,18 @@ import { cookies } from "next/headers";
 import { cartIdSchema, type Cart, type CartSnapshot } from "../schemas/cart";
 import { getCart } from "./cart";
 
-const CART_COOKIE_NAME = "shopify_cart_id";
+const LEGACY_CART_COOKIE_NAME = "shopify_cart_id";
+const CART_COOKIE_NAME =
+  process.env.NODE_ENV === "production"
+    ? "__Host-shopify_cart_id"
+    : LEGACY_CART_COOKIE_NAME;
 const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 export async function getCartIdFromCookies() {
-  const value = (await cookies()).get(CART_COOKIE_NAME)?.value;
+  const cookieStore = await cookies();
+  const value =
+    cookieStore.get(CART_COOKIE_NAME)?.value ??
+    cookieStore.get(LEGACY_CART_COOKIE_NAME)?.value;
   const parsed = cartIdSchema.safeParse(value);
 
   return parsed.success ? parsed.data : null;
@@ -17,14 +24,27 @@ export async function getCartIdFromCookies() {
 
 export async function setCartIdCookie(cartId: unknown) {
   const value = cartIdSchema.parse(cartId);
+  const cookieStore = await cookies();
 
-  (await cookies()).set(CART_COOKIE_NAME, value, {
+  cookieStore.set(CART_COOKIE_NAME, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
+    priority: "high",
     maxAge: CART_COOKIE_MAX_AGE,
   });
+
+  if (CART_COOKIE_NAME !== LEGACY_CART_COOKIE_NAME) {
+    cookieStore.set(LEGACY_CART_COOKIE_NAME, "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      priority: "high",
+      maxAge: 0,
+    });
+  }
 }
 
 export function toCartSnapshot(cart: Cart): CartSnapshot {

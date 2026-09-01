@@ -79,3 +79,35 @@ export const FOOTER_SETTINGS_QUERY = defineQuery(/* groq */ `
     )
   }
 `);
+
+export const SEO_SETTINGS_QUERY = defineQuery(/* groq */ `
+  *[_type == "siteSettings" && _id == "siteSettings"][0] {
+    "siteName": coalesce(siteName, null),
+    "logo": select(
+      defined(logo.asset) => logo {
+        "alt": coalesce(alt, "Store logo"),
+        "url": asset->url,
+        "width": asset->metadata.dimensions.width,
+        "height": asset->metadata.dimensions.height
+      },
+      null
+    ),
+    "seo": select(
+      defined(seo) => seo {
+        "title": coalesce(title, null),
+        "description": coalesce(description, null),
+        "socialImage": select(
+          defined(socialImage.asset) => socialImage {
+            "alt": coalesce(alt, "Store social sharing image"),
+            "url": asset->url,
+            "width": asset->metadata.dimensions.width,
+            "height": asset->metadata.dimensions.height
+          },
+          null
+        )
+      },
+      null
+    ),
+    "socialProfiles": coalesce(footer.socialLinks[].url, [])
+  }
+`);

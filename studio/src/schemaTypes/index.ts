@@ -9,9 +9,11 @@ import { navigationItem } from "./navigationItem";
 import { newsletterSettings } from "./newsletterSettings";
 import { socialLink } from "./socialLink";
 import { siteSettings } from "./siteSettings";
+import { seoSettings } from "./seoSettings";
 
 export const schemaTypes = [
   siteSettings,
+  seoSettings,
   homePage,
   navigationItem,
   navigationChild,

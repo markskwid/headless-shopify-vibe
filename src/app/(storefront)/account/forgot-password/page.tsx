@@ -6,6 +6,7 @@ import { RecoverPasswordForm } from "@/components/account/account-forms";
 export const metadata: Metadata = {
   title: "Reset password",
   description: "Request password reset instructions for your customer account.",
+  robots: "noindex, nofollow",
 };
 
 export default function ForgotPasswordPage() {

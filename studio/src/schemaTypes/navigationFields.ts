@@ -39,7 +39,10 @@ export const navigationLinkFields = [
 
         if (parent?.linkType !== "internal") return true;
         if (!value) return "Add an internal path.";
-        if (!value.startsWith("/") && !value.startsWith("#")) {
+        if (
+          (!value.startsWith("/") && !value.startsWith("#")) ||
+          value.startsWith("//")
+        ) {
           return "Internal paths must start with / or #.";
         }
 
@@ -65,11 +68,11 @@ export const navigationLinkFields = [
 
         try {
           const url = new URL(value);
-          return url.protocol === "http:" || url.protocol === "https:"
+          return url.protocol === "https:"
             ? true
-            : "External URLs must start with http:// or https://.";
+            : "External URLs must start with https://.";
         } catch {
-          return "Enter a complete external URL starting with http:// or https://.";
+          return "Enter a complete external URL starting with https://.";
         }
       }),
   }),

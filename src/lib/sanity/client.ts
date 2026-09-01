@@ -32,6 +32,8 @@ export async function sanityFetch<TSchema extends z.ZodType>(
     perspective: "published",
     useCdn: true,
     stega: false,
+    timeout: 10_000,
+    maxRetries: 2,
   });
 
   let response: unknown;

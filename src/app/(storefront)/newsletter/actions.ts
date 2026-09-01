@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { z } from "zod";
 
 import {
@@ -13,7 +12,8 @@ import {
   getCustomerNewsletterProfile,
   subscribeCustomerToEmailMarketing,
 } from "@/lib/shopify";
-import { parseBuyerIp } from "@/lib/shopify/utils/buyer-ip";
+import { checkRateLimits } from "@/lib/security/rate-limit";
+import { getRequestSecurityContext } from "@/lib/security/request";
 
 export type NewsletterActionState = {
   message: string | null;
@@ -68,12 +68,22 @@ export async function subscribeToNewsletterAction(
     };
   }
 
+  const requestContext = await getRequestSecurityContext();
+  const rateLimit = await checkRateLimits([
+    { policy: "newsletter-ip", identifier: requestContext.clientKey },
+    { policy: "newsletter-account", identifier: parsed.data.email },
+  ]);
+
+  if (!rateLimit.allowed) {
+    return {
+      message: "Too many signup attempts. Wait a while and try again.",
+      fieldErrors: {},
+      success: false,
+    };
+  }
+
   const customerAccessToken = await getCustomerAccessTokenFromCookies();
-  const requestHeaders = await headers();
-  const buyerIp = parseBuyerIp(
-    requestHeaders.get("x-real-ip") ??
-      requestHeaders.get("x-forwarded-for"),
-  );
+  const buyerIp = requestContext.buyerIp;
   let shopifySyncStatus: ShopifySyncStatus = customerAccessToken
     ? "unavailable"
     : "guest";
