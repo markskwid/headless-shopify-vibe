@@ -3,7 +3,11 @@ import { defineQuery } from "next-sanity";
 const navigationFields = /* groq */ `
   _key,
   label,
-  "href": select(linkType == "external" => externalUrl, internalPath),
+  "href": select(
+    linkType == "external" => externalUrl,
+    linkType == "editorialPage" => "/" + editorialPage->slug.current,
+    internalPath
+  ),
   "openInNewTab": linkType == "external" && openInNewTab == true
 `;
 

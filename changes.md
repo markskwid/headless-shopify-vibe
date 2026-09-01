@@ -3,6 +3,97 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-01 - Mobile menu trigger semantics
+
+- Corrected the mobile navigation Sheet trigger's Base UI contract by marking
+  its rendered shadcn/Base UI Button as a native button and explicitly setting
+  `type="button"`. This removes the development warning about applying
+  non-native button behavior to an actual `<button>` and avoids unintended
+  ARIA/role attributes while preserving the existing appearance and drawer
+  interaction.
+- No dependency, environment, content, Shopify GraphQL artifact, or API-version
+  change is required. Restart an already-running development server if its
+  compiled client still displays the previous warning.
+
+## 2026-09-01 - Local environment template parity
+
+- Synchronized the ignored local environment file with every key currently
+  documented by `.env.example` without changing or exposing existing provider
+  credentials. Added the active localhost storefront origin and the default
+  trusted proxy header; optional Upstash distributed-rate-limit values, its
+  conditional salt, and exceptional Server Action proxy origins remain blank
+  until their corresponding production infrastructure is configured.
+- No application code, dependency, external service, Shopify GraphQL artifact,
+  or API-version change was required. Restart the development server so Next.js
+  loads the added environment values.
+
+## 2026-09-01 - Sanity editorial and legal page builder
+
+- Added a reusable Sanity `editorialPage` document for root-level About,
+  Contact, FAQ, Shipping and returns, Privacy policy, Terms, and future
+  editorial pages. Documents include validated non-reserved slugs, ordered
+  page-builder sections, page-specific SEO fallbacks, social images, and an
+  optional `noindex` setting; no existing content migration is required.
+- Added focused Page hero, rich-text, FAQ, contact-details, and callout object
+  types with accessible authoring constraints, stable array keys, required
+  image alternative text, secure rich-text links, clear block previews, and a
+  maximum of one first-position hero per page.
+- Added an Editorial pages Studio list and expanded reusable navigation fields
+  with strong editorial-page references. Header links, nested header links,
+  footer links, homepage CTAs, and editorial CTAs now resolve current page slugs
+  through GROQ while retaining existing internal-path and HTTPS destinations.
+- Added a validated, server-only editorial-page query and service with explicit
+  projections, five-minute fallback revalidation, provider/page/slug cache
+  tags, and graceful behavior when Sanity is not configured. Portable Text,
+  every builder block, images, links, metadata, sitemap records, and route slugs
+  are validated with Zod at the Sanity boundary.
+- Added a responsive root `/<slug>` Server Component route with page-builder
+  rendering, eager above-the-fold hero images, semantic headings, native FAQ
+  disclosures, contact links, safe external-link behavior, canonical metadata,
+  social cards, `noindex` support, breadcrumb structured data, and the existing
+  branded 404 behavior for invalid, missing, or unpublished pages.
+- Added indexable editorial pages to the generated sitemap with Sanity update
+  timestamps and expanded the recommended Sanity webhook filter to include
+  `editorialPage`, allowing published changes and deletions to invalidate the
+  shared Sanity cache after deployment. Updated README authoring, navigation,
+  caching, webhook, and project-structure guidance. No dependency, environment,
+  Shopify GraphQL artifact, or API-version change was required.
+
+## 2026-09-01 - Authenticated Shopify and Sanity cache webhooks
+
+- Added `POST /api/webhooks/shopify` for HTTPS webhook deliveries. The handler
+  reads the untouched bounded JSON body, verifies Shopify's base64 HMAC-SHA256
+  in constant time with a server-only app client secret, validates delivery
+  headers and payloads with Zod, and rejects deliveries whose shop domain does
+  not match the configured `myshopify.com` store.
+- Added `POST /api/webhooks/sanity` using `next-sanity`'s signed-body parser,
+  Content Lake propagation delay, configured-dataset verification, bounded JSON
+  bodies, and Zod validation. The recommended GROQ filter targets only the
+  published `siteSettings`, `homePage`, and `editorialPage` documents consumed by the
+  storefront, avoiding draft-keystroke webhook traffic.
+- Added a provider-wide `sanity` tag to every cached Sanity fetch, matching the
+  existing provider-wide `shopify` tag. Valid Shopify deliveries immediately
+  expire all public Shopify fetch caches and the generated sitemap; valid Sanity
+  deliveries immediately expire all Sanity fetch caches. Existing time-based
+  revalidation remains the outage/misconfiguration fallback, while carts,
+  customer sessions, authenticated data, and mutations remain uncached.
+- Expanded product-detail, recommendation, and storefront-home cache tags so
+  inventory, product, collection, and store-identity changes also participate
+  in granular invalidation and future webhook routing.
+- Added `SHOPIFY_WEBHOOK_SECRET` and `SANITY_REVALIDATE_SECRET` placeholders and
+  documented their distinct ownership, HTTPS endpoints, recommended Shopify
+  catalog topics, Sanity filter/projection, testing, delivery monitoring, and
+  production checklist requirements. Existing deployments must configure both
+  secrets and create the external subscriptions before on-demand invalidation
+  becomes active; no content or data migration is required.
+- Added regression tests for exact raw-body Shopify HMAC verification, tamper
+  rejection, JSON content-type enforcement, and declared/actual webhook body
+  limits. No dependency, Shopify Storefront GraphQL operation, generated
+  artifact, or API-version change was required.
+- Retained the Next.js 16.3 development server's managed `AGENTS.md` guidance,
+  which directs future coding work to the installed version-specific framework
+  docs and prevents `next dev` from repeatedly dirtying the working tree.
+
 ## 2026-09-01 - Storefront SEO and Next development indicator fix
 
 - Added a validated `STOREFRONT_BASE_URL` setting for the public headless origin

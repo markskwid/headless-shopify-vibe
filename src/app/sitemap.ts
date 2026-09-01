@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { storefrontUrl } from "@/lib/seo/env";
+import { getEditorialSitemapEntries } from "@/lib/sanity";
 import { getShopifyConfig, getSitemapResources } from "@/lib/shopify";
 
 export const revalidate = 3_600;
@@ -19,12 +20,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  if (!getShopifyConfig().configured) return entries;
+  const shopifyConfigured = getShopifyConfig().configured;
+  const [editorialResult, productsResult, collectionsResult] =
+    await Promise.allSettled([
+      getEditorialSitemapEntries(),
+      shopifyConfigured ? getSitemapResources("PRODUCT") : Promise.resolve([]),
+      shopifyConfigured
+        ? getSitemapResources("COLLECTION")
+        : Promise.resolve([]),
+    ]);
 
-  const [productsResult, collectionsResult] = await Promise.allSettled([
-    getSitemapResources("PRODUCT"),
-    getSitemapResources("COLLECTION"),
-  ]);
+  if (editorialResult.status === "fulfilled") {
+    entries.push(
+      ...editorialResult.value.map((page) => ({
+        url: storefrontUrl(`/${page.slug}`),
+        lastModified: new Date(page._updatedAt),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      })),
+    );
+  }
 
   if (productsResult.status === "fulfilled") {
     entries.push(

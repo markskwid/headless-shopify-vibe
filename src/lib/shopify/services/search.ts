@@ -45,7 +45,7 @@ export async function getProductByHandle(input: unknown) {
     schema: productByHandleResponseSchema,
     variables: { handle },
     revalidate: 300,
-    tags: [`shopify-product:${handle}`],
+    tags: ["shopify-products", `shopify-product:${handle}`],
   });
 
   return response.product;
@@ -58,7 +58,10 @@ export async function getRelatedProducts(input: unknown) {
     schema: productRecommendationsResponseSchema,
     variables: { handle },
     revalidate: 300,
-    tags: [`shopify-product-recommendations:${handle}`],
+    tags: [
+      "shopify-product-recommendations",
+      `shopify-product-recommendations:${handle}`,
+    ],
   });
 
   return response.productRecommendations ?? [];

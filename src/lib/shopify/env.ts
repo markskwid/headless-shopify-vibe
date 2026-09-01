@@ -10,6 +10,11 @@ const optionalTokenSchema = z.preprocess(
   z.string().trim().min(1).optional(),
 );
 
+const webhookSecretSchema = z.preprocess(
+  emptyStringToUndefined,
+  z.string().trim().min(32).max(256).optional(),
+);
+
 const shopifyEnvSchema = z.object({
   SHOPIFY_STORE_DOMAIN: z
     .string({ error: "SHOPIFY_STORE_DOMAIN is required." })
@@ -109,6 +114,10 @@ export function requireShopifyConfig(): ShopifyConfig {
   }
 
   return result.config;
+}
+
+export function getShopifyWebhookSecret() {
+  return webhookSecretSchema.parse(process.env.SHOPIFY_WEBHOOK_SECRET);
 }
 
 export class ShopifyConfigurationError extends Error {

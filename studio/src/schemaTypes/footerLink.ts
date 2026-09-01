@@ -15,11 +15,17 @@ export const footerLink = defineType({
       linkType: "linkType",
       internalPath: "internalPath",
       externalUrl: "externalUrl",
+      editorialPageTitle: "editorialPage.title",
     },
-    prepare({ title, linkType, internalPath, externalUrl }) {
+    prepare({ title, linkType, internalPath, externalUrl, editorialPageTitle }) {
       return {
         title: title || "Untitled link",
-        subtitle: linkType === "external" ? externalUrl : internalPath,
+        subtitle:
+          linkType === "editorialPage"
+            ? `Page: ${editorialPageTitle || "Missing page"}`
+            : linkType === "external"
+              ? externalUrl
+              : internalPath,
       };
     },
   },

@@ -39,7 +39,11 @@ const HOME_PAGE_BANNER_PROJECTION = /* groq */ `
   "cta": select(
     defined(cta.label) => cta {
       label,
-      "href": select(linkType == "external" => externalUrl, internalPath),
+      "href": select(
+        linkType == "external" => externalUrl,
+        linkType == "editorialPage" => "/" + editorialPage->slug.current,
+        internalPath
+      ),
       "openInNewTab": linkType == "external" && openInNewTab == true
     },
     null

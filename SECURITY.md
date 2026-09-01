@@ -29,6 +29,10 @@ on the current lockfile and rerun the verification commands after every update.
   storefront needs. Use separate credentials for development and production.
 - Restrict Sanity project CORS origins and Studio access to the intended domains
   and team members.
+- Configure signed Shopify catalog webhook subscriptions with the owning app's
+  client secret for `/api/webhooks/shopify`.
+- Configure a separate 32+ character Sanity webhook secret and a
+  published-content-only webhook for `/api/webhooks/sanity`.
 - Enable provider and platform logs, alert on repeated 429/401/403 responses,
   and review authentication, newsletter, and checkout anomalies.
 - Add edge WAF or bot challenges for distributed credential stuffing; per-IP
@@ -51,3 +55,8 @@ content, and Klaviyo owns newsletter delivery. A compromise or policy change in
 one of those services remains outside the protections this application can
 enforce, so provider-side access reviews, MFA, audit logs, and backups are still
 required.
+
+Shopify and Sanity cache-revalidation endpoints authenticate every delivery and
+are safe to retry because invalidation is idempotent. Monitor Shopify delivery
+logs and Sanity webhook attempts, and retain a hosting/CDN request-size ceiling
+and volumetric abuse protection in front of these public endpoints.

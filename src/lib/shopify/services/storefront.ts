@@ -12,7 +12,11 @@ export function getStorefrontHome() {
     schema: storefrontHomeSchema,
     variables: { first: 8, collectionCount: 6 },
     revalidate: 300,
-    tags: ["shopify-products", "shopify-collections"],
+    tags: [
+      "shopify-products",
+      "shopify-collections",
+      "shopify-store-identity",
+    ],
   });
 }
 

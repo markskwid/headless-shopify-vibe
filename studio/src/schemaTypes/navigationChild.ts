@@ -14,11 +14,14 @@ export const navigationChild = defineType({
       title: "label",
       internalPath: "internalPath",
       externalUrl: "externalUrl",
+      editorialPageTitle: "editorialPage.title",
     },
-    prepare({ title, internalPath, externalUrl }) {
+    prepare({ title, internalPath, externalUrl, editorialPageTitle }) {
       return {
         title: title || "Untitled child link",
-        subtitle: internalPath || externalUrl || "Missing destination",
+        subtitle: editorialPageTitle
+          ? `Page: ${editorialPageTitle}`
+          : internalPath || externalUrl || "Missing destination",
       };
     },
   },

@@ -14,7 +14,17 @@ import {
 } from "./schemas";
 
 export { getHomePageBanners } from "./services/home-page";
+export {
+  getEditorialPage,
+  getEditorialSitemapEntries,
+} from "./services/editorial-page";
 export type { HomePageBannerSlide } from "./services/home-page";
+export type {
+  EditorialPage,
+  EditorialPageBlock,
+  EditorialRichText,
+} from "./schemas/editorial-page";
+export { editorialPageParamsSchema } from "./schemas/editorial-page";
 
 export type {
   FooterLinkColumn,
