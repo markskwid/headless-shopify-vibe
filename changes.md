@@ -3,6 +3,28 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-01 - Dual secured and provider-neutral distributions
+
+- Established `clean/shopify-sanity-core` as a clean branch based directly on
+  the pre-hardening storefront. It now includes the current Sanity editorial
+  page builder, editorial navigation references, Shopify/Sanity SEO, robots and
+  sitemap generation, and authenticated cache webhooks without inheriting the
+  combined security commit in its branch history.
+- Removed Upstash dependencies and environment keys, application-wide rate
+  limiting, proxy-specific client-IP trust, global CSP/security middleware,
+  hardened-cookie migration, and security deployment documentation from the
+  core distribution. Required provider webhook signature verification,
+  bounded payload handling, HTTP-only identifiers, and Zod boundary validation
+  remain part of their corresponding reusable features.
+- Added persistent branch policy to both distributions: generally reusable
+  Shopify, Sanity, editorial, SEO, and webhook features must stay in parity,
+  while deployment-specific security choices remain exclusive to secured
+  `main`. Documented the distinction in both READMEs.
+- Made the root layout type-check without relying on generated global route
+  helper types, improving fresh-clone verification in both branches. No
+  environment migration, Shopify GraphQL operation, generated artifact, or API
+  version changed on secured `main`.
+
 ## 2026-09-01 - Mobile menu trigger semantics
 
 - Corrected the mobile navigation Sheet trigger's Base UI contract by marking

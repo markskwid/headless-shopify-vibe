@@ -8,6 +8,14 @@ runs with graceful fallbacks when either service is not configured. Private
 tokens stay in server-only modules and are never exposed with `NEXT_PUBLIC_`
 variables.
 
+This repository maintains two distributions. `main` is the secured storefront
+and may include deployment-specific hardening such as shared rate limiting and
+security headers. `clean/shopify-sanity-core` tracks the same reusable Shopify,
+Sanity, editorial-page, SEO, sitemap, and authenticated webhook capabilities
+without selecting a rate-limit vendor, WAF/CDN policy, CSP, or proxy-trust
+strategy. New generally reusable commerce and editorial features should be
+ported to both branches; security-provider choices remain on `main`.
+
 The Sanity-editable global header includes Shopify-powered predictive product search. It waits
 300 ms after typing, previews up to six products, handles empty and failed
 searches, and links to a complete `/search` results page. Search result products

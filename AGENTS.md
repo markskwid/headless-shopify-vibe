@@ -1,5 +1,19 @@
 # Headless Shopify Store
 
+## Distribution branches
+
+- `main` is the secured distribution and may include deployment-specific
+  hardening and security-provider integrations.
+- `clean/shopify-sanity-core` is the provider-neutral reusable distribution.
+- Port every generally reusable Shopify commerce, Sanity editorial, SEO, and
+  authenticated cache-webhook feature from `main` to the core branch.
+- Do not port rate-limiting vendors, WAF/CDN policy, Content Security Policy,
+  proxy-specific trust configuration, or other deployment-specific hardening
+  to the core branch.
+- Keep feature-required safeguards in both distributions, including server-only
+  secrets, HTTP-only identifiers, boundary validation, and Shopify/Sanity
+  webhook signature verification.
+
 ## Architecture
 
 - Shopify is the source of truth for commerce data.
