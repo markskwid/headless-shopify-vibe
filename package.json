@@ -25,7 +25,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.mjs",
+    "test": "node --import=tsx --import=./tests/setup.mjs --conditions=react-server --experimental-test-module-mocks --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test",
     "graphql:codegen": "node scripts/generate-shopify-graphql.mjs",
     "studio:dev": "npm run dev --workspace studio",
     "studio:build": "npm run build --workspace studio",
@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@sanity/webhook": "^4.0.4",
     "@types/node": "^24.13.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -61,6 +62,7 @@
     "eslint-config-next": "16.3.3",
     "graphql": "^17.0.2",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3"
   }
 }

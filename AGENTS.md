@@ -119,6 +119,23 @@ Do not declare a task complete while the build, linting, code generation, or rel
 - Record GraphQL schema, query, mutation, fragment, generated-artifact, and API-version changes.
 - Each entry should briefly explain what changed, why it changed, and any required migration or environment updates.
 
+## Automated testing
+
+- Add or update tests for every meaningful behavior change.
+- Follow the testing conventions documented in `TESTING.md`.
+- Place test files in their designated test folders.
+- Test observable behavior and failure cases rather than implementation details.
+- Mock Shopify, Sanity, Klaviyo, and other external services in unit and
+  integration tests.
+- Never run automated tests against production services.
+- Do not weaken production validation or error handling to make tests pass.
+- After meaningful changes, run:
+  - `npm run test`
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run build`
+- Do not declare work complete while required checks are failing.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

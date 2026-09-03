@@ -3,6 +3,40 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-03 - Phase 1 unit and integration test infrastructure
+
+- Added the development-only `tsx` loader so Node's built-in test runner can
+  execute the storefront's TypeScript module graph without introducing another
+  test framework. Updated the cross-platform test command to use Node test
+  discovery, React Server export conditions, and built-in ESM module mocks.
+- Added shared test setup that rejects unexpected external `fetch` requests
+  immediately and restores Node mocks and modified environment variables after
+  every test. Updated the testing guide with the actual runner, isolation, and
+  network-mocking conventions.
+- Added integration coverage for Shopify request authentication, caching,
+  response validation, HTTP/GraphQL/network failures, cart creation, quantity
+  updates, line removal, mutation warnings and user errors, customer login, and
+  secure cart/customer session cookies. All provider requests use deterministic
+  in-process mocks.
+- Added boundary coverage for collection filters, sorting, price ranges,
+  pagination cursors, search and handle inputs, discounted cart subtotals,
+  Shopify and Sanity environment parsing, Sanity response validation and
+  missing-content fallbacks, Sanity fetch cache settings, and authenticated
+  Shopify webhook rejection paths.
+- Added integration coverage that signs synthetic Sanity webhook payloads with
+  `@sanity/webhook` and exercises the real `next-sanity` `parseBody()` path for
+  valid, tampered, missing-signature, and wrong-secret requests. Declared the
+  signing toolkit as a development dependency because tests import it directly
+  instead of relying on `next-sanity`'s transitive dependency.
+- Added explicit malformed Shopify GraphQL-envelope cases and replaced the
+  subtotal test's partial cart line with a production-valid fixture.
+- Deferred blocking non-`fetch` network transports until tests introduce a
+  client that uses them. Also deferred reconsidering the test command's broad
+  `ExperimentalWarning` suppression; neither safeguard is claimed as present.
+- Updated `package-lock.json` for the approved test-only dependencies. No
+  production runtime behavior, environment configuration, Shopify GraphQL
+  operation, generated artifact, or API version changed.
+
 ## 2026-09-03 - Sanity announcement bar
 
 - Added an optional announcement bar to the Sanity `siteSettings` singleton
