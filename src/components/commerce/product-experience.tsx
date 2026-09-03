@@ -249,7 +249,7 @@ export function ProductExperience({ product }: { product: ProductDetails }) {
         ) : null}
       </div>
 
-      <div className="self-start lg:sticky lg:top-[calc(var(--header-height)+2rem)]">
+      <div className="self-start lg:sticky lg:top-[calc(var(--site-header-height)+2rem)]">
         {product.vendor ? (
           <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
             {product.vendor}

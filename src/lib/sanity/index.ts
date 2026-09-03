@@ -30,6 +30,7 @@ export type {
   FooterLinkColumn,
   FooterSettings,
   FooterSocialLink,
+  HeaderAnnouncement,
   HeaderNavigationItem,
   HeaderSettings,
   SeoSettings,

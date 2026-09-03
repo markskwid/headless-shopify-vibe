@@ -35,7 +35,7 @@ type StorefrontShellProps = {
 
 function StorefrontShell({ children }: StorefrontShellProps) {
   return (
-    <div className="relative flex min-h-[calc(100svh-var(--header-height))] flex-col overflow-hidden bg-background">
+    <div className="relative flex min-h-[calc(100svh-var(--site-header-height))] flex-col overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-96 bg-[radial-gradient(circle_at_top_left,oklch(0.91_0.11_151_/_0.65),transparent_42%),radial-gradient(circle_at_top_right,oklch(0.93_0.08_77_/_0.55),transparent_38%)]" />
       <main className="relative z-10 flex-1">{children}</main>
     </div>

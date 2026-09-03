@@ -1,3 +1,4 @@
+import { announcement } from "./announcement";
 import { bannerCta } from "./bannerCta";
 import { calloutSection } from "./calloutSection";
 import { contactSection } from "./contactSection";
@@ -21,6 +22,7 @@ import { seoSettings } from "./seoSettings";
 
 export const schemaTypes = [
   siteSettings,
+  announcement,
   seoSettings,
   homePage,
   navigationItem,

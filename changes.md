@@ -3,6 +3,24 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-03 - Sanity announcement bar
+
+- Added an optional announcement bar to the Sanity `siteSettings` singleton
+  with up to five ordered messages and optional editorial-page, internal-path,
+  or HTTPS external destinations. Published fields are explicitly projected by
+  GROQ and validated with Zod at the existing server-only Sanity boundary.
+- Added a compact responsive header announcement component. One message renders
+  statically; two or more use the existing Embla dependency for dragging,
+  previous/next and pause/play controls, and five-second autoplay that pauses
+  on hover, focus, or a hidden tab and remains disabled for reduced-motion
+  visitors.
+- Added a shared total site-header height token so product, collection, cart,
+  and homepage sticky/viewport layouts account for the optional bar without
+  changing the existing navigation height. Updated Sanity authoring guidance.
+  No dependency, environment, Shopify GraphQL artifact, API-version, or content
+  migration change is required; configure and publish the existing Site
+  settings singleton to opt in.
+
 ## 2026-09-01 - Dual secured and provider-neutral distributions
 
 - Established `clean/shopify-sanity-core` as a clean branch based directly on
