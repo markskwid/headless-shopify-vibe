@@ -30,6 +30,8 @@ major or minor code, configuration, dependency, and documentation change.
   instead of relying on `next-sanity`'s transitive dependency.
 - Added explicit malformed Shopify GraphQL-envelope cases and replaced the
   subtotal test's partial cart line with a production-valid fixture.
+- Aligned the secured `main` branch cart-cookie test with its existing
+  high-priority cookie protection so the assertion covers the hardened option.
 - Deferred blocking non-`fetch` network transports until tests introduce a
   client that uses them. Also deferred reconsidering the test command's broad
   `ExperimentalWarning` suppression; neither safeguard is claimed as present.

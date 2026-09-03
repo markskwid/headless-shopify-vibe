@@ -67,6 +67,7 @@ test("cart cookie writes are HTTP-only and persist for 30 days", async () => {
         secure: false,
         sameSite: "lax",
         path: "/",
+        priority: "high",
         maxAge: 60 * 60 * 24 * 30,
       },
     },
