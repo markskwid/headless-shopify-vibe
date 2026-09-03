@@ -148,7 +148,7 @@ export function CartPage() {
           <CartTable cart={cart} />
         </section>
 
-        <aside className="space-y-6 lg:sticky lg:top-[calc(var(--header-height)+2rem)]">
+        <aside className="space-y-6 lg:sticky lg:top-[calc(var(--site-header-height)+2rem)]">
           <CartMessages />
           <div className="rounded-xl border p-5">
             <CartForms key={cart.note ?? "empty-note"} note={cart.note ?? ""} />

@@ -19,6 +19,13 @@ const sanityImageSchema = z.object({
   height: z.number().positive(),
 });
 
+const announcementSchema = z.object({
+  _key: z.string().min(1),
+  text: z.string().min(1).max(160),
+  href: safeLinkDestinationSchema.nullable(),
+  openInNewTab: z.boolean(),
+});
+
 export const headerSettingsSchema = z
   .object({
     siteName: z.string().min(1).nullable(),
@@ -28,11 +35,13 @@ export const headerSettingsSchema = z
         children: z.array(navigationLinkSchema),
       }),
     ),
+    announcements: z.array(announcementSchema).max(5),
   })
   .nullable();
 
 export type HeaderSettings = NonNullable<z.infer<typeof headerSettingsSchema>>;
 export type HeaderNavigationItem = HeaderSettings["navigation"][number];
+export type HeaderAnnouncement = HeaderSettings["announcements"][number];
 
 const socialPlatformSchema = z.enum([
   "facebook",

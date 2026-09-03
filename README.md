@@ -8,7 +8,7 @@ runs with graceful fallbacks when either service is not configured. Private
 tokens stay in server-only modules and are never exposed with `NEXT_PUBLIC_`
 variables.
 
-The Sanity-editable global header includes Shopify-powered predictive product search. It waits
+The Sanity-editable global header includes an optional announcement bar and Shopify-powered predictive product search. One announcement renders statically; two or more become a draggable Embla carousel that autoplays, includes pause and navigation controls, pauses during interaction, and respects reduced-motion preferences. Announcement text can optionally link to an editorial page, storefront path, or HTTPS website. Predictive search waits
 300 ms after typing, previews up to six products, handles empty and failed
 searches, and links to a complete `/search` results page. Search result products
 open theme-native `/products/[handle]` pages with a draggable Embla image gallery,
@@ -273,7 +273,8 @@ with one level of child links, and the complete footer.
    should appear. Drag items to reorder them and publish the document. The
    existing Shopify introduction remains visible until at least one complete,
    enabled banner is published.
-6. Open the **Site settings** singleton, edit the header, footer, and **SEO and
+6. Open the **Site settings** singleton, optionally enable **Show announcement
+   bar** and add up to five ordered announcements, then edit the header, footer, and **SEO and
    social sharing** defaults, then publish it. The SEO block accepts the default
    homepage title, description, and a recommended 1200 × 630 sharing image.
    Footer link columns are single-level; social-platform icons are selected

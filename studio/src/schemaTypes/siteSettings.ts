@@ -50,6 +50,29 @@ export const siteSettings = defineType({
       validation: (rule) => rule.max(10),
     }),
     defineField({
+      name: "showAnnouncementBar",
+      title: "Show announcement bar",
+      type: "boolean",
+      description:
+        "Show published announcements above the header. Two or more announcements become an autoplaying carousel.",
+      initialValue: false,
+    }),
+    defineField({
+      name: "announcements",
+      title: "Announcements",
+      type: "array",
+      description:
+        "Add up to five announcements and drag them into the order customers should see.",
+      of: [defineArrayMember({ type: "announcement" })],
+      hidden: ({ document }) => document?.showAnnouncementBar !== true,
+      validation: (rule) =>
+        rule.max(5).custom((value, context) =>
+          context.document?.showAnnouncementBar !== true || value?.length
+            ? true
+            : "Add at least one announcement before showing the bar.",
+        ),
+    }),
+    defineField({
       name: "footer",
       title: "Footer",
       type: "footerSettings",
@@ -60,7 +83,7 @@ export const siteSettings = defineType({
     prepare({ title, media }) {
       return {
         title: title || "Site settings",
-        subtitle: "Header, footer, and SEO defaults",
+        subtitle: "Announcement bar, header, footer, and SEO defaults",
         media,
       };
     },

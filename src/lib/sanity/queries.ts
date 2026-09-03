@@ -28,7 +28,21 @@ export const HEADER_SETTINGS_QUERY = defineQuery(/* groq */ `
       "children": coalesce(children[] {
         ${navigationFields}
       }, [])
-    }, [])
+    }, []),
+    "announcements": select(
+      showAnnouncementBar == true => coalesce(announcements[] {
+        _key,
+        text,
+        "href": select(
+          linkType == "external" => externalUrl,
+          linkType == "editorialPage" => "/" + editorialPage->slug.current,
+          linkType == "internal" => internalPath,
+          null
+        ),
+        "openInNewTab": linkType == "external" && openInNewTab == true
+      }, []),
+      []
+    )
   }
 `);
 

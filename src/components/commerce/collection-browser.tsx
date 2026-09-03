@@ -327,7 +327,7 @@ export function CollectionBrowser({
 
       <div className="mt-7 grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <aside className="hidden lg:block">
-          <div className="sticky top-[calc(var(--header-height)+2rem)] rounded-xl border bg-card p-5">
+          <div className="sticky top-[calc(var(--site-header-height)+2rem)] rounded-xl border bg-card p-5">
             <div className="mb-6 flex items-center justify-between gap-3 border-b pb-4">
               <h2 className="flex items-center gap-2 font-medium">
                 <SlidersHorizontal className="size-4" aria-hidden="true" />

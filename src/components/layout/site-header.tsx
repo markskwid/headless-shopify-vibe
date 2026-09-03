@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { ChevronDown, Search, ShoppingBag, UserRound } from "lucide-react";
 
 import { HeaderActions } from "@/components/layout/header-actions";
+import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { HeaderBrand } from "@/components/layout/header-brand";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { buttonVariants } from "@/components/ui/button";
@@ -108,6 +109,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background/85 backdrop-blur-xl">
+      <AnnouncementBar announcements={settings?.announcements ?? []} />
       <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
         <div className="hidden h-(--header-height) grid-cols-[1fr_auto_1fr] items-center lg:grid">
           <HeaderBrand logo={logo} name={name} className="justify-self-start" />
