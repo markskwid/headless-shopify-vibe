@@ -260,7 +260,7 @@ export function ProductExperience({ product }: { product: ProductDetails }) {
         </h1>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <p className="text-xl font-semibold">
+          <p aria-label="Product price" className="text-xl font-semibold">
             {formatMoney(price.amount, price.currencyCode)}
           </p>
           {compareAtPrice && Number(compareAtPrice.amount) > Number(price.amount) ? (

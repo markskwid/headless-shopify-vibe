@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { CollectionSortValue } from "@/lib/shopify";
@@ -9,6 +9,8 @@ type SortOption = {
   label: string;
   value: CollectionSortValue;
 };
+
+const subscribeToHydration = () => () => {};
 
 export function CollectionSortSelect({
   options,
@@ -22,6 +24,11 @@ export function CollectionSortSelect({
   value: CollectionSortValue;
 }) {
   const router = useRouter();
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false,
+  );
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -30,8 +37,8 @@ export function CollectionSortSelect({
       <select
         name="sort"
         defaultValue={value}
-        disabled={isPending}
-        aria-busy={isPending}
+        disabled={!isHydrated || isPending}
+        aria-busy={!isHydrated || isPending}
         onChange={(event) => {
           const nextSort = event.target.value as CollectionSortValue;
           const params = new URLSearchParams({ sort: nextSort });

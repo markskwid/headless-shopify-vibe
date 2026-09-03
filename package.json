@@ -26,6 +26,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "node --import=tsx --import=./tests/setup.mjs --conditions=react-server --experimental-test-module-mocks --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test",
+    "test:e2e": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.e2e.local ./node_modules/@playwright/test/cli.js test",
+    "test:e2e:ui": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.e2e.local ./node_modules/@playwright/test/cli.js test --ui",
     "graphql:codegen": "node scripts/generate-shopify-graphql.mjs",
     "studio:dev": "npm run dev --workspace studio",
     "studio:build": "npm run build --workspace studio",
@@ -55,8 +57,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@playwright/test": "^1.62.1",
     "@sanity/webhook": "^4.0.4",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^24.13.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",

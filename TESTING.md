@@ -48,3 +48,53 @@ The test command loads TypeScript through `tsx`, enables Node's built-in ESM
 module mocking, applies the React Server export condition for server-only
 modules, and lets Node discover every `*.test.mjs` file. No real provider
 credentials or network services are required.
+
+## Playwright end-to-end tests
+
+Browser tests live under `tests/e2e/`, use the `.spec.ts` naming convention,
+and run in desktop Chromium or a mobile Chromium device profile. The suite is
+limited to two workers so concurrent development-store traffic does not
+overwhelm the local Next.js server or Shopify API. Install the single required
+browser engine after installing dependencies:
+
+```bash
+npx playwright install chromium
+```
+
+Copy the E2E placeholders from `.env.example` into the ignored
+`.env.e2e.local` file. Use only a designated development or staging Shopify
+store and Sanity project/dataset. The configured collection must expose the
+available test product on its first page, the search term must return that
+product, and the unavailable handle must identify a sold-out product. Mobile
+navigation must expose Shopify's built-in `/collections/all` destination, whose
+first page must contain at least one available product. The editorial slug and
+heading must identify published test content.
+
+The E2E configuration fails before browser startup when required data is
+missing, the base URL matches the declared production hostname, an external
+URL does not use HTTPS, or the explicit Shopify/Sanity approval values do not
+match the app configuration. Checkout tests intercept the approved HTTPS
+checkout URL before it reaches Shopify and never enter checkout or place an
+order. Tests never publish or mutate Sanity content or modify customer data.
+
+Run the browser suite headlessly:
+
+```bash
+npm run test:e2e
+```
+
+Open Playwright's interactive UI:
+
+```bash
+npm run test:e2e:ui
+```
+
+Playwright reports, results, traces, videos, screenshots, and any future saved
+authentication state are ignored by Git. Authentication coverage remains
+deferred until both optional customer variables identify an approved
+development-store account.
+
+There is currently no GitHub Actions workflow. Do not make E2E tests required
+in CI until a protected staging environment and its secrets are configured.
+Future CI must avoid exposing secrets to pull requests from forks and should
+install only Chromium with `npx playwright install --with-deps chromium`.

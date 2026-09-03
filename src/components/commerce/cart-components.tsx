@@ -367,7 +367,7 @@ export function CartTotals({
               {formatMoney(subtotal.originalAmount, subtotal.currencyCode)}
             </span>
           ) : null}
-          <span className="text-base font-semibold">
+          <span aria-label="Cart subtotal" className="text-base font-semibold">
             {formatMoney(subtotal.discountedAmount, subtotal.currencyCode)}
           </span>
         </div>

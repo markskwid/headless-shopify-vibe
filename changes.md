@@ -3,6 +3,41 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-03 - Phase 2 Playwright end-to-end test foundation
+
+- Corrected the browser suite after its first live development-store run:
+  collection sorting now waits for client hydration before interaction, the
+  server-driven sort transition has a bounded parallel-run timeout, the
+  cart journey targets visible drawer quantity headings instead of the
+  accessibility-hidden page background, and mobile Sanity navigation entries
+  remain semantic links while closing the menu after navigation. Variant
+  selection also tolerates valid sold-out alternatives whose action label
+  changes. The portable
+  mobile journey uses Shopify's built-in all-products collection and its first
+  available product rather than depending on a store-specific Sanity child-link
+  URL or product pagination position.
+- Replaced the deprecated default `@sanity/image-url` builder import with the
+  supported named export, without changing generated image URLs.
+- Added Playwright as a development-only dependency with separate headless and
+  UI scripts, desktop Chromium and mobile Chromium projects, local web-server
+  startup, two-worker concurrency and network-aware journey timeouts, and
+  failure-focused screenshots, videos, and traces.
+- Added fail-fast E2E environment validation that rejects the declared
+  production storefront, requires HTTPS for external targets, and requires
+  explicit Shopify store and Sanity project/dataset approvals before a browser
+  starts. Real values stay in the ignored `.env.e2e.local` file.
+- Added isolated browser journeys for storefront landmarks and navigation,
+  collection sorting and malformed filters, product pricing and availability,
+  cart quantity/subtotal/removal behavior, intercepted checkout handoff,
+  predictive search and invalid queries, Sanity editorial content, the 404
+  experience, and mobile navigation/cart usability and overflow.
+- Added accessible product-price and cart-subtotal labels so browser tests and
+  assistive technology can identify changing commerce values without relying
+  on generated classes or DOM structure.
+- Documented the development/staging test-data contract, browser installation,
+  safe future CI integration, ignored Playwright artifacts, and deferred
+  authentication, Firefox, WebKit, and visual-regression coverage.
+
 ## 2026-09-03 - Phase 1 unit and integration test infrastructure
 
 - Added the development-only `tsx` loader so Node's built-in test runner can

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Menu } from "lucide-react";
 
@@ -7,7 +8,6 @@ import { HeaderBrand } from "@/components/layout/header-brand";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -37,30 +37,30 @@ function ClosingLink({
   item,
   className,
   children,
+  onNavigate,
 }: {
   item: Pick<HeaderNavigationItem, "href" | "openInNewTab">;
   className: string;
   children: React.ReactNode;
+  onNavigate: () => void;
 }) {
   return (
-    <SheetClose
-      nativeButton={false}
-      render={
-        <Link
-          href={item.href}
-          className={className}
-          {...linkTarget(item)}
-        />
-      }
+    <Link
+      href={item.href}
+      className={className}
+      onClick={onNavigate}
+      {...linkTarget(item)}
     >
       {children}
-    </SheetClose>
+    </Link>
   );
 }
 
 export function MobileMenu({ logo, name, navigation }: MobileMenuProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
       <SheetTrigger
         nativeButton
         render={
@@ -100,6 +100,7 @@ export function MobileMenu({ logo, name, navigation }: MobileMenuProps) {
                       <ClosingLink
                         item={item}
                         className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                        onNavigate={() => setOpen(false)}
                       >
                         View all {item.label}
                       </ClosingLink>
@@ -108,6 +109,7 @@ export function MobileMenu({ logo, name, navigation }: MobileMenuProps) {
                           key={child._key}
                           item={child}
                           className="block rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                          onNavigate={() => setOpen(false)}
                         >
                           {child.label}
                         </ClosingLink>
@@ -120,6 +122,7 @@ export function MobileMenu({ logo, name, navigation }: MobileMenuProps) {
                   <ClosingLink
                     item={item}
                     className="block min-h-11 rounded-lg px-3 py-2.5 text-base font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    onNavigate={() => setOpen(false)}
                   >
                     {item.label}
                   </ClosingLink>

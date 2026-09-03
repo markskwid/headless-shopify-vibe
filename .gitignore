@@ -12,6 +12,11 @@
 
 # testing
 /coverage
+/blob-report/
+/playwright-report/
+/test-results/
+/tests/e2e/.auth/
+/.playwright/
 
 # next.js
 /.next/
