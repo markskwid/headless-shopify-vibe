@@ -419,7 +419,7 @@ also uncached.
 npm run dev        # start the Turbopack development server
 npm run lint       # run ESLint
 npm run typecheck  # run TypeScript without emitting files
-npm run test       # run security and application regression tests
+npm run test       # run Node unit and integration tests
 npm run graphql:codegen # validate operations against Shopify and regenerate artifacts
 npm run build      # create a production build
 npm run start      # serve the production build
@@ -427,6 +427,23 @@ npm run studio:dev       # start standalone Sanity Studio on localhost:3333
 npm run studio:typecheck # type-check the Studio workspace
 npm run studio:build     # build Studio (requires Studio env values)
 ```
+
+## Testing and continuous integration
+
+Unit and integration tests use Node's built-in test runner with `tsx` as the
+TypeScript loader. They cover provider-neutral application boundaries including
+cart behavior, Shopify response handling, customer sessions, content
+normalization, environment validation, and signed Shopify and Sanity webhooks.
+Provider requests are mocked, and the shared setup rejects unexpected `fetch`
+calls, so the suite requires no real service credentials or network access.
+
+The basic GitHub Actions workflow runs for pushes and pull requests targeting
+`main` or `clean/shopify-sanity-core`. Separate Ubuntu and Windows jobs use Node
+24.11.1 and run `npm ci`, `npm run test`, `npm run lint`, `npm run typecheck`,
+and `npm run build` with read-only repository permissions. This core branch
+intentionally excludes deployment-specific security-provider tests and does not
+currently run browser tests. See [`TESTING.md`](./TESTING.md) for test isolation
+and contribution rules.
 
 ## Extending the storefront
 

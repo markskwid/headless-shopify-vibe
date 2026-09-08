@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Provider-neutral cross-platform CI
+
+- Ported the reusable GitHub Actions verification workflow to the core branch.
+  Pushes and pull requests targeting either distribution run the committed
+  install, Node unit/integration tests, lint, typecheck, and production build on
+  Ubuntu and Windows with Node 24.11.1.
+- Kept the workflow credential-free and read-only, with no rate-limit vendor,
+  deployment hardening, or browser-service configuration added to the core
+  distribution.
+- Updated the README and testing guide to describe the core branch's actual
+  provider-neutral coverage and its intentional differences from `main`.
+
 ## 2026-09-03 - Phase 1 unit and integration test infrastructure
 
 - Added the development-only `tsx` loader so Node's built-in test runner can

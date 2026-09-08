@@ -34,7 +34,7 @@
 5. Search, filtering, and pagination
 6. Sanity response validation and fallbacks
 7. Webhook verification
-8. Environment configuration and rate limiting
+8. Environment configuration and feature boundary validation
 
 ## Commands
 
@@ -48,3 +48,15 @@ The test command loads TypeScript through `tsx`, enables Node's built-in ESM
 module mocking, applies the React Server export condition for server-only
 modules, and lets Node discover every `*.test.mjs` file. No real provider
 credentials or network services are required.
+
+## Continuous integration
+
+The basic GitHub Actions workflow runs unit and integration tests, lint,
+typecheck, and a production build on both Ubuntu and Windows with Node
+24.11.1. It runs for pushes and pull requests targeting either distribution
+branch, uses read-only repository permissions, and does not load provider
+credentials.
+
+This provider-neutral branch does not select a rate-limit vendor or include the
+secured distribution's deployment-specific hardening tests. Browser tests are
+also not part of this branch's current CI suite.
