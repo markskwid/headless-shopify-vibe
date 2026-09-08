@@ -3,6 +3,19 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Vercel staging-readiness preparation
+
+- Added `staging` to the GitHub Actions push and pull-request targets so release
+  candidates must pass the same Node tests, lint, typecheck, and production
+  build on Ubuntu and Windows before promotion to `main`.
+- Documented the approved two-project Vercel architecture, isolated provider
+  resources, stable staging webhook destination, build settings, and guarded
+  `staging`-to-`main` promotion flow. No Vercel project was linked and no
+  deployment or platform setting was created.
+- Added repository-agent deployment safeguards requiring verified previews,
+  non-production preview credentials, explicit production approval, secret
+  confidentiality, and deployment-status reporting.
+
 ## 2026-09-08 - Basic cross-platform continuous integration
 
 - Added a least-privilege GitHub Actions workflow for pushes and pull requests
