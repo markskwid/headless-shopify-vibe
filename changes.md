@@ -3,6 +3,30 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Visible add-to-cart failure feedback
+
+- Updated failed add-to-cart attempts to open the cart drawer even when Shopify
+  does not return a cart, and made cart messages visible in the drawer's empty
+  state so shoppers receive actionable feedback instead of a silent failure.
+- Added a Playwright regression journey that aborts the add-to-cart Server
+  Action in the browser, verifies the accessible error is displayed, and avoids
+  creating a real Shopify cart for the failure scenario.
+
+## 2026-09-08 - Vercel clean-install compatibility
+
+- Regenerated `package-lock.json` from an isolated dependency state with npm
+  11.6.4 so clean Linux installs include the complete optional `@emnapi`
+  dependency graph required by the current Sharp and Tailwind WASM packages.
+- Pinned package-manager metadata to npm 11.6.4 so supporting tools use the
+  resolver that generated the complete cross-platform lockfile. Verified the
+  repaired lockfile with clean installs under both npm 11.6.4 and Vercel's
+  previously observed npm 11.6.2 runtime.
+- Constrained the package Node engine to `24.x` instead of an open-ended
+  minimum, preventing a future automatic upgrade to an unverified Node major
+  while remaining compatible with Vercel's maintained Node 24 runtime.
+- Updated the README runtime requirement. No application dependency or
+  environment-variable value changed.
+
 ## 2026-09-08 - Vercel staging-readiness preparation
 
 - Added `staging` to the GitHub Actions push and pull-request targets so release

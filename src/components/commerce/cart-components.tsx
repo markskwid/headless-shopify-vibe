@@ -43,7 +43,7 @@ function variantLabel(line: CartLine) {
     .join(" / ");
 }
 
-export function CartMessages() {
+export function CartMessages({ className }: { className?: string } = {}) {
   const { error, warning, dismissMessage } = useCart();
 
   if (!error && !warning) return null;
@@ -57,6 +57,7 @@ export function CartMessages() {
         error
           ? "border-destructive/20 bg-destructive/5 text-destructive"
           : "border-border bg-muted text-muted-foreground",
+        className,
       )}
       aria-live="polite"
     >
