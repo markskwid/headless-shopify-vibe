@@ -3,6 +3,17 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Core distribution Vercel install repair
+
+- Regenerated the provider-neutral distribution lockfile with npm 11.6.4 so
+  cross-platform optional dependencies, including the `@emnapi` packages used
+  by the Next.js toolchain, are represented for Linux clean installs.
+- Pinned the supported Node.js major to `24.x` and npm to `11.6.4`, matching the
+  reusable runtime/tooling repair already applied to the secured distribution
+  while avoiding automatic upgrades to an untested future Node.js major.
+- No runtime dependency, storefront behavior, or deployment-specific security
+  integration was added.
+
 ## 2026-09-08 - Visible add-to-cart failure feedback
 
 - Ported the provider-neutral cart feedback improvement from the secured
