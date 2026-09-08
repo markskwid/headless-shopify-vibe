@@ -3,6 +3,27 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Core distribution Vercel install repair
+
+- Regenerated the provider-neutral distribution lockfile with npm 11.6.4 so
+  cross-platform optional dependencies, including the `@emnapi` packages used
+  by the Next.js toolchain, are represented for Linux clean installs.
+- Pinned the supported Node.js major to `24.x` and npm to `11.6.4`, matching the
+  reusable runtime/tooling repair already applied to the secured distribution
+  while avoiding automatic upgrades to an untested future Node.js major.
+- No runtime dependency, storefront behavior, or deployment-specific security
+  integration was added.
+
+## 2026-09-08 - Visible add-to-cart failure feedback
+
+- Ported the provider-neutral cart feedback improvement from the secured
+  distribution: failed add-to-cart attempts now open the drawer and display a
+  dismissible error even when the cart is empty.
+- Kept Playwright and all deployment-specific security configuration out of the
+  core distribution; the guarded browser regression remains in `main`, while
+  the core implementation is covered by its existing lint, typecheck, build,
+  and Node test verification workflow.
+
 ## 2026-09-08 - Provider-neutral cross-platform CI
 
 - Ported the reusable GitHub Actions verification workflow to the core branch.

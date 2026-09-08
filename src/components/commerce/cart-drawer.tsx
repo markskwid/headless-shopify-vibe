@@ -37,13 +37,9 @@ export function CartDrawer() {
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
+          <CartMessages className="mx-5 mt-4 w-[calc(100%-2.5rem)]" />
           {hasItems && cart ? (
-            <>
-              <div className="px-5 pt-4">
-                <CartMessages />
-              </div>
-              <CartCompactList cart={cart} />
-            </>
+            <CartCompactList cart={cart} />
           ) : (
             <CartEmptyState compact onNavigate={() => setOpen(false)} />
           )}
