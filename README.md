@@ -503,8 +503,8 @@ loaded, and does not place orders or publish content. See
 [`TESTING.md`](./TESTING.md) for the required fixture data and safety rules.
 
 The basic GitHub Actions workflow runs for pushes and pull requests targeting
-`main` or `clean/shopify-sanity-core`. Separate Ubuntu and Windows jobs use Node
-24.11.1 and run:
+`main`, `staging`, or `clean/shopify-sanity-core`. Separate Ubuntu and Windows
+jobs use Node 24.11.1 and run:
 
 ```bash
 npm ci
@@ -519,6 +519,42 @@ customer, CMS, newsletter, Redis, or deployment credentials. Playwright remains
 outside CI until a protected staging environment and appropriately scoped
 secrets are configured; run `npm run test:e2e` locally for the current browser
 suite.
+
+## Vercel deployment workflow
+
+Use separate Vercel projects for staging and production. The staging project
+tracks the protected `staging` branch and uses only development or staging
+Shopify, Sanity, Klaviyo, and Upstash resources. Feature branches may create
+preview deployments in that project, while the stable staging hostname is the
+only preview-side destination for Shopify and Sanity webhooks. Run the browser
+suite against that stable hostname before promoting the same tested changes to
+`main`.
+
+The production project tracks only `main`. Assign production credentials only
+to its Production environment; leave its Preview environment unconfigured or
+connect it exclusively to non-production services. Never assign production
+customer credentials to Vercel or the E2E suite. Keep webhook secrets, rate-limit
+salts, provider tokens, and datasets distinct between projects.
+
+For both projects, use the repository root, the detected Next.js framework,
+`npm ci` as the install command, `npm run build` as the build command, and Node
+24.x. Set `STOREFRONT_BASE_URL` to each project's stable public origin. On
+Vercel, use `x-vercel-forwarded-for` as the trusted proxy IP header and normally
+leave `SERVER_ACTION_ALLOWED_ORIGINS` unset unless a reviewed reverse proxy
+changes the request host relationship.
+
+Recommended promotion flow:
+
+1. Open a pull request from a feature branch into `staging`.
+2. Require Ubuntu and Windows CI before merging.
+3. Verify the stable staging deployment and run `npm run test:e2e` against it.
+4. Open a pull request from `staging` into `main`.
+5. Require CI again, review the deployment diff, and merge only with explicit
+   production approval.
+
+Vercel CLI linkage and project settings are local or dashboard state and are
+not committed. The ignored `.vercel/`, `.env.local`, and `.env.e2e.local` paths
+must remain outside source control.
 
 ## Extending the storefront
 

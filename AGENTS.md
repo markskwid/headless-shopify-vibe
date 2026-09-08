@@ -137,6 +137,17 @@ Do not declare a task complete while the build, linting, code generation, or rel
   - `npm run build`
 - Do not declare work complete while required checks are failing.
 
+## Deployment safety
+
+- Preview deployments may be created only after required verification passes.
+- Use development or staging Shopify and Sanity credentials for preview and
+  staging deployments.
+- Never deploy to production, merge into the production branch, modify
+  production environment variables, or change production domains without
+  explicit user approval.
+- Never print, commit, or expose environment-variable values.
+- Report the deployment URL and deployment status after every deployment.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
