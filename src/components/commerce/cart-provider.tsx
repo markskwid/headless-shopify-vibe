@@ -71,10 +71,11 @@ export function CartProvider({
         setError(result.error);
         setWarning(result.warning);
 
-        if (options?.openCart && result.cart) setOpen(true);
+        if (options?.openCart) setOpen(true);
         return !result.error;
       } catch {
         setError("The cart could not be updated. Please try again.");
+        if (options?.openCart) setOpen(true);
         return false;
       } finally {
         pendingRef.current = false;

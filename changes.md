@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Visible add-to-cart failure feedback
+
+- Ported the provider-neutral cart feedback improvement from the secured
+  distribution: failed add-to-cart attempts now open the drawer and display a
+  dismissible error even when the cart is empty.
+- Kept Playwright and all deployment-specific security configuration out of the
+  core distribution; the guarded browser regression remains in `main`, while
+  the core implementation is covered by its existing lint, typecheck, build,
+  and Node test verification workflow.
+
 ## 2026-09-08 - Provider-neutral cross-platform CI
 
 - Ported the reusable GitHub Actions verification workflow to the core branch.
