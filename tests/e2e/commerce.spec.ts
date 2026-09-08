@@ -139,6 +139,35 @@ test("cart quantity, subtotal, and empty state update through a complete journey
   ).toBeVisible();
 });
 
+test("an add-to-cart request failure opens the drawer and explains the error", async ({
+  page,
+}) => {
+  const { addButton } = await openAvailableProduct(page);
+
+  await page.route(
+    (url) => url.pathname === productPath(e2eEnvironment.productHandle),
+    async (route) => {
+      if (
+        route.request().method() === "POST" &&
+        route.request().headers()["next-action"]
+      ) {
+        await route.abort("failed");
+        return;
+      }
+
+      await route.continue();
+    },
+  );
+
+  await addButton.click();
+
+  const drawer = page.getByRole("dialog", { name: "Your cart" });
+  await expect(drawer).toBeVisible();
+  await expect(
+    drawer.getByText("The cart could not be updated. Please try again."),
+  ).toBeVisible();
+});
+
 test("checkout action hands off to the approved Shopify URL without loading it", async ({
   page,
 }) => {
