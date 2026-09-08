@@ -11,9 +11,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function HeaderActions({
-  authenticated,
+  accountUrl,
 }: {
-  authenticated: boolean;
+  accountUrl: string;
 }) {
   const pathname = usePathname();
   const { cart, setOpen } = useCart();
@@ -36,7 +36,7 @@ export function HeaderActions({
   return (
     <div className="flex items-center justify-self-end">
       <PredictiveSearch />
-      <AccountMenu authenticated={authenticated} />
+      <AccountMenu accountUrl={accountUrl} />
       {pathname === "/cart" ? (
         <Link
           href="/cart"

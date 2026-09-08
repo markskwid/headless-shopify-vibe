@@ -55,13 +55,13 @@ The Shopify Cart API powers add-to-cart, a right-side cart drawer, responsive
 subtotals, and Shopify-hosted checkout. The cart ID remains in an HTTP-only
 cookie and is never exposed to browser JavaScript.
 
-Legacy Shopify customer accounts power the theme-native sign-in, registration,
-password-recovery, and account pages. Customer access tokens remain in secure
-HTTP-only cookies; remembered sessions persist for seven days. Login associates
-the active Shopify cart with the customer, while logout removes that buyer
-identity. The account dashboard includes fulfilled-order count, net spend after
-refunds, pending orders, complete order history, primary shipping information,
-and saved-address creation.
+The header account icon and `/account/login` now enter Shopify's hosted,
+passwordless customer accounts. The custom account dashboard and its legacy
+Storefront API services remain in the codebase during the Customer Account API
+migration, but a hosted Shopify session does not authenticate that dashboard
+yet. The completed migration will exchange Shopify's OAuth authorization code
+for a server-held Customer Account API session and attach that session to the
+active cart buyer identity.
 
 The order-history modal includes a compact image, name, and discounted price
 list for each order. Saved addresses can be edited, deleted after confirmation,
@@ -81,7 +81,7 @@ into Shopify email marketing. The private API key never reaches the browser.
 - Node.js 24.x (CI uses 24.11.1)
 - npm
 - A Shopify store with products published to the Headless sales channel
-- Legacy customer accounts for the included email/password account experience
+- Shopify customer accounts enabled for the hosted passwordless login
 - A Sanity project for editable homepage, editorial pages, navigation, footer,
   and SEO defaults
 - A Klaviyo list and scoped private API key for newsletter subscriptions
@@ -210,51 +210,31 @@ published document types currently queried by the storefront avoids a delivery
 for every Studio keystroke. Use Sanity's webhook attempts log to verify a `200`
 response after publishing and deleting test content.
 
-## Enable legacy customer accounts
+## Customer account migration status
 
-The included account pages intentionally use Shopify's legacy email/password
-flow because they provide a separate registration form and password recovery.
+In Shopify admin, open **Settings → Customer accounts**, enable customer
+accounts, and keep `SHOPIFY_STORE_DOMAIN` set to the store's validated
+`*.myshopify.com` domain. Clicking the header user icon now navigates directly
+to that store's `/account` entry point. Shopify shows its passwordless login to
+signed-out customers and the hosted account to customers who already have a
+Shopify session. The canonical `/account/login` route performs the same hosted
+redirect, so saved links no longer render the legacy password form.
 
-1. In Shopify admin, open **Settings → Customer accounts** and select legacy
-   customer accounts.
-2. In the Headless sales channel, grant the storefront permission to read and
-   write customers (`unauthenticated_read_customers` and
-   `unauthenticated_write_customers`).
-3. Restart the development server if you replace the Storefront API token after
-   changing its permissions.
+This is the first migration slice, not the completed hybrid integration. The
+existing `/account` dashboard, registration, password recovery, address,
+profile, and legacy session services are intentionally retained for the next
+Customer Account API work. Until OAuth/PKCE callback and token storage are
+implemented, signing in on Shopify does not authenticate the custom `/account`
+dashboard or associate its customer identity with the headless cart.
 
-The user icon opens sign-in and create-account options. Registration collects
-every field supported by Shopify's legacy `CustomerCreateInput`: first name,
-last name, email, optional E.164 phone number, password, and email-marketing
-consent. Form values remain in place after validation or Shopify errors, and
-password fields include accessible visibility controls. Authenticated customers
-who revisit `/account/login` or `/account/register` are redirected to `/account`.
-The shorter `/login` and `/register` routes redirect to those canonical guest
-pages, or directly to `/account` when a customer session already exists.
+The retained legacy implementation uses a secure HTTP-only customer access
+token, associates an existing cart through Shopify buyer identity, and removes
+that association on logout. It should not be treated as the active sign-in path
+once the store is switched to new customer accounts.
 
-After login, an existing cart is associated with the customer through Shopify's
-buyer identity, and carts created later include the customer token at creation.
-Logout removes the association before revoking the customer session. Account
-orders and addresses are authenticated, uncached Storefront API reads. Order
-history is paginated to completion; spend is shown net of refunds and kept
-separate by currency when a customer has ordered through multiple Markets.
-The account-details editor lets signed-in customers change or remove their name
-and E.164 phone number, update their password, and opt in or out of email
-marketing through Shopify's authenticated `customerUpdate` mutation. Password
-changes store Shopify's replacement access token and update the cart buyer
-identity so the active browser remains signed in. When a store uses double
-opt-in, a requested marketing subscription can remain unconfirmed until the
-customer follows Shopify's email confirmation. Profile updates remain uncached.
-Customers can review all saved addresses and add a new address, optionally
-making it their primary shipping address. Existing addresses include edit,
-delete, and make-primary actions. Selecting a country loads its states or
-provinces; city is always entered as free text because city coverage varies by
-dataset. The server normalizes the selected country and province and trims the
-city value. Location options are public and cached, while customer addresses and
-mutations remain uncached.
-
-New Shopify customer accounts use passwordless email codes and require a
-different Customer Account API OAuth flow.
+The next migration slice will add the Customer Account API OAuth authorization
+and callback routes, PKCE/state/nonce validation, encrypted server-side session
+cookies, token refresh and logout, and authenticated cart buyer identity.
 
 ## Connect Sanity and edit storefront content
 

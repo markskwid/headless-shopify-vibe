@@ -9,7 +9,10 @@ import { MobileMenu } from "@/components/layout/mobile-menu";
 import { buttonVariants } from "@/components/ui/button";
 import { getHeaderSettings } from "@/lib/sanity";
 import type { HeaderNavigationItem } from "@/lib/sanity/schemas";
-import { getStorefrontIdentity, hasCustomerSession } from "@/lib/shopify";
+import {
+  getHostedCustomerAccountUrl,
+  getStorefrontIdentity,
+} from "@/lib/shopify";
 import { cn } from "@/lib/utils";
 
 const defaultNavigation: HeaderNavigationItem[] = [
@@ -86,12 +89,12 @@ function DesktopNavigation({
 export async function SiteHeader() {
   await connection();
 
-  const [sanityResult, shopifyResult, customerSessionResult] =
+  const [sanityResult, shopifyResult, customerAccountUrlResult] =
     await Promise.allSettled([
-    getHeaderSettings(),
-    getStorefrontIdentity(),
-    hasCustomerSession(),
-  ]);
+      getHeaderSettings(),
+      getStorefrontIdentity(),
+      Promise.resolve().then(getHostedCustomerAccountUrl),
+    ]);
   const settings =
     sanityResult.status === "fulfilled" ? sanityResult.value : null;
   const shopName =
@@ -103,9 +106,10 @@ export async function SiteHeader() {
     ? settings.navigation
     : defaultNavigation;
   const logo = settings?.logo ?? null;
-  const authenticated =
-    customerSessionResult.status === "fulfilled" &&
-    customerSessionResult.value;
+  const accountUrl =
+    customerAccountUrlResult.status === "fulfilled"
+      ? customerAccountUrlResult.value
+      : "/account/login";
 
   return (
     <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background/85 backdrop-blur-xl">
@@ -114,7 +118,7 @@ export async function SiteHeader() {
         <div className="hidden h-(--header-height) grid-cols-[1fr_auto_1fr] items-center lg:grid">
           <HeaderBrand logo={logo} name={name} className="justify-self-start" />
           <DesktopNavigation navigation={navigation} />
-          <HeaderActions authenticated={authenticated} />
+          <HeaderActions accountUrl={accountUrl} />
         </div>
         <div className="grid h-(--header-height) grid-cols-[1fr_minmax(0,auto)_1fr] items-center lg:hidden">
           <MobileMenu logo={logo} name={name} navigation={navigation} />
@@ -123,7 +127,7 @@ export async function SiteHeader() {
             name={name}
             className="max-w-20 justify-self-center sm:max-w-48 [&_img]:max-w-full"
           />
-          <HeaderActions authenticated={authenticated} />
+          <HeaderActions accountUrl={accountUrl} />
         </div>
       </div>
     </header>

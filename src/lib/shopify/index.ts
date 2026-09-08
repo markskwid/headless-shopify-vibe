@@ -22,6 +22,7 @@ export {
   getCustomerAccessTokenFromCookies,
   hasCustomerSession,
 } from "./services/customer-session";
+export { getHostedCustomerAccountUrl } from "./services/customer-account";
 export {
   getPredictiveProducts,
   getProductByHandle,

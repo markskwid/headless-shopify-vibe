@@ -3,6 +3,24 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Shopify-hosted customer account login entry
+
+- Changed the header account icon into a direct link to Shopify's hosted
+  customer-account entry point, where signed-out customers use the new
+  passwordless customer login and existing Shopify sessions continue to the
+  hosted account.
+- Replaced the theme-native `/account/login` form with a server redirect to the
+  validated store's hosted `/account` route. The existing custom dashboard and
+  legacy customer services remain in place temporarily and are not treated as
+  authenticated by the hosted Shopify session yet.
+- Added integration coverage for the canonical login redirect plus unit
+  coverage for hosted-account URL construction and rejection of an unsafe
+  non-Shopify redirect host. No Customer Account API credential or new
+  dependency is required for this interim hosted-login slice.
+- Updated the setup guide to distinguish the working hosted login from the
+  intentionally deferred OAuth session, custom-dashboard, cart-identity, and
+  logout migration work.
+
 ## 2026-09-08 - Visible add-to-cart failure feedback
 
 - Updated failed add-to-cart attempts to open the cart drawer even when Shopify
