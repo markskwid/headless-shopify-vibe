@@ -473,7 +473,9 @@ also uncached.
 npm run dev        # start the Turbopack development server
 npm run lint       # run ESLint
 npm run typecheck  # run TypeScript without emitting files
-npm run test       # run security and application regression tests
+npm run test       # run Node unit and integration tests
+npm run test:e2e   # run Playwright journeys in headless Chromium
+npm run test:e2e:ui # open the Playwright interactive test runner
 npm run graphql:codegen # validate operations against Shopify and regenerate artifacts
 npm run build      # create a production build
 npm run start      # serve the production build
@@ -481,6 +483,42 @@ npm run studio:dev       # start standalone Sanity Studio on localhost:3333
 npm run studio:typecheck # type-check the Studio workspace
 npm run studio:build     # build Studio (requires Studio env values)
 ```
+
+## Testing and continuous integration
+
+Unit and integration tests use Node's built-in test runner with `tsx` as the
+TypeScript loader. They cover application and security boundaries including
+cart behavior, Shopify response handling, customer sessions, content
+normalization, environment validation, rate limiting, and signed Shopify and
+Sanity webhooks. Provider requests are mocked, and the shared test setup rejects
+unexpected `fetch` calls so these tests do not require real credentials or
+contact Shopify, Sanity, Klaviyo, or other external services.
+
+Playwright covers configured storefront journeys in desktop and mobile
+Chromium. Copy the E2E placeholders from `.env.example` into the ignored
+`.env.e2e.local` file and use only a designated development or staging Shopify
+store and Sanity dataset. The suite validates its approved hosts and provider
+identifiers before launching a browser, intercepts checkout before Shopify is
+loaded, and does not place orders or publish content. See
+[`TESTING.md`](./TESTING.md) for the required fixture data and safety rules.
+
+The basic GitHub Actions workflow runs for pushes and pull requests targeting
+`main` or `clean/shopify-sanity-core`. Separate Ubuntu and Windows jobs use Node
+24.11.1 and run:
+
+```bash
+npm ci
+npm run test
+npm run lint
+npm run typecheck
+npm run build
+```
+
+The workflow has read-only repository permissions and receives no storefront,
+customer, CMS, newsletter, Redis, or deployment credentials. Playwright remains
+outside CI until a protected staging environment and appropriately scoped
+secrets are configured; run `npm run test:e2e` locally for the current browser
+suite.
 
 ## Extending the storefront
 

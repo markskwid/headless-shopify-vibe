@@ -3,6 +3,22 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Basic cross-platform continuous integration
+
+- Added a least-privilege GitHub Actions workflow for pushes and pull requests
+  targeting `main` or `clean/shopify-sanity-core`. Ubuntu and Windows jobs use
+  Node 24.11.1, install the committed lockfile with `npm ci`, and run unit and
+  integration tests, lint, typecheck, and the production build.
+- Kept Playwright and all Shopify, Sanity, Klaviyo, customer, and deployment
+  credentials out of the basic workflow. Browser CI remains deferred until a
+  protected staging environment is available.
+- Updated the testing guide with the active CI coverage and credential-safety
+  boundary. No new runtime or development dependency is required.
+- Expanded the README command reference and added testing and CI guidance for
+  the Node unit/integration suite, guarded Playwright staging journeys, the
+  cross-platform verification matrix, credential boundaries, and the current
+  reason browser tests remain outside CI.
+
 ## 2026-09-03 - Phase 2 Playwright end-to-end test foundation
 
 - Corrected the browser suite after its first live development-store run:

@@ -94,7 +94,13 @@ authentication state are ignored by Git. Authentication coverage remains
 deferred until both optional customer variables identify an approved
 development-store account.
 
-There is currently no GitHub Actions workflow. Do not make E2E tests required
-in CI until a protected staging environment and its secrets are configured.
-Future CI must avoid exposing secrets to pull requests from forks and should
-install only Chromium with `npx playwright install --with-deps chromium`.
+The basic GitHub Actions workflow runs unit and integration tests, lint,
+typecheck, and a production build on both Ubuntu and Windows with Node
+24.11.1. It runs for pushes and pull requests targeting either distribution
+branch, uses only read access to repository contents, and does not load provider
+credentials.
+
+Playwright is intentionally excluded from CI until a protected staging
+environment and its secrets are configured. Future E2E jobs must not expose
+secrets to pull requests from forks and should install only Chromium with
+`npx playwright install --with-deps chromium`.
