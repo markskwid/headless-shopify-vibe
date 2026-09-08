@@ -78,7 +78,7 @@ into Shopify email marketing. The private API key never reaches the browser.
 
 ## Requirements
 
-- Node.js 24.11.1 or newer
+- Node.js 24.x (CI uses 24.11.1)
 - npm
 - A Shopify store with products published to the Headless sales channel
 - Legacy customer accounts for the included email/password account experience

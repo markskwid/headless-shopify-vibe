@@ -3,6 +3,17 @@
 All notable changes to this project are documented here. Add an entry for every
 major or minor code, configuration, dependency, and documentation change.
 
+## 2026-09-08 - Vercel clean-install compatibility
+
+- Regenerated `package-lock.json` with Linux optional dependency metadata so
+  Vercel's `npm ci` install can resolve the native and WASM packages required
+  by the current Tailwind toolchain.
+- Constrained the package Node engine to `24.x` instead of an open-ended
+  minimum, preventing a future automatic upgrade to an unverified Node major
+  while remaining compatible with Vercel's maintained Node 24 runtime.
+- Updated the README runtime requirement. No application dependency version or
+  environment-variable value changed.
+
 ## 2026-09-08 - Vercel staging-readiness preparation
 
 - Added `staging` to the GitHub Actions push and pull-request targets so release
